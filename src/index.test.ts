@@ -4,14 +4,13 @@ import { startServer } from '.'
 
 await startServer()
 
-/*
 test('POST /cadastro', async () => {
   const res = await app.request('/auth/cadastro', {
     method: 'POST',
     body: JSON.stringify([
       {
-        nome: 'Jabarweaed',
-        email: 'jabaweas@gmail.com',
+        nome: 'Jabaraabss',
+        email: 'jabaracass@gmail.com',
         senha: 'asd12345345',
         permissao: 'estagiario',
         dataInicio: '2024-11-11',
@@ -22,8 +21,8 @@ test('POST /cadastro', async () => {
   expect(res.status).toBe(201)
   console.log(await res.json())
 })
-*/
 
+let loginres: any
 test('POST /login', async () => {
   const res = await app.request('/auth/login', {
     method: 'POST',
@@ -31,7 +30,8 @@ test('POST /login', async () => {
     headers: new Headers({ 'Content-Type': 'application/json' }),
   })
   expect(res.status).toBe(200)
-  console.log(await res.json())
+  loginres = await res.json()
+  console.log(loginres)
 })
 
 test('GET /check', async () => {
@@ -39,7 +39,7 @@ test('GET /check', async () => {
     method: 'GET',
     headers: new Headers({
       Authorization:
-        'Bearer eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MywicGVybWlzc2FvIjoiZXN0YWdpYXJpbyIsImV4cCI6MTc2MTAyNTAyMX0.7d18b8QA24QbhDhcOaj8n78PdoFIMHmW5J9bsimW8hE',
+        `Bearer ${loginres.token}`,
     }),
   })
   expect(res.status).toBe(200)

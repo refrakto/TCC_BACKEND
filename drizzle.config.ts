@@ -1,9 +1,16 @@
 import { defineConfig } from 'drizzle-kit'
-import { DB_HOST, DB_NOME, DB_PORT, DB_SENHA, DB_USUARIO } from 'index'
+
+const {
+	DB_USUARIO,
+	DB_SENHA,
+	DB_NOME,
+	DB_HOST = 'localhost',
+	DB_PORT = '5432',
+} = process.env
 
 export default defineConfig({
 	dialect: 'postgresql',
-	schema: './server/database/schema/**',
+	schema: './src/database/schema/**',
 	dbCredentials: {
 		url: `postgresql://${DB_USUARIO}:${DB_SENHA}@${DB_HOST}:${DB_PORT}/${DB_NOME}`,
 	},
