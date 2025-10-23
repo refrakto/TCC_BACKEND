@@ -1,11 +1,11 @@
 import { Hono } from 'hono'
 import { vValidator } from '@hono/valibot-validator'
-import { CadastroSchema } from 'utils/valibot'
+import { CadastroSchema } from 'valibot/cadastro'
 import * as schema from 'database'
-import { HTTPException } from 'hono/http-exception'
 import { inArray } from 'drizzle-orm'
 import { hash } from '@node-rs/argon2'
 import { array, InferInput, minLength, pipe } from 'valibot'
+import { acesso } from 'utils/permissao'
 
 export const CadastroArraySchema = pipe(
   array(CadastroSchema, 'Array de cadastros inválido'),
@@ -16,16 +16,17 @@ export type CadastroRequest = InferInput<typeof CadastroArraySchema>
 
 export default new Hono().post(
   '/',
-  vValidator('json', CadastroArraySchema, r => {
+  acesso('admin'),
+  vValidator('json', CadastroArraySchema, (r, c) => {
     if (!r.success) {
       const formattedIssues = r.issues.map(i => ({
         field: i.path?.[0]?.key,
         message: i.message,
       }))
-      throw new HTTPException(422, {
+      return c.json({
         message: 'Erro de Validação',
         cause: formattedIssues,
-      })
+      }, 422)
     }
   }),
   async c => {
@@ -40,9 +41,9 @@ export default new Hono().post(
       .map(([e]) => e)
 
     if (duplicatedInput.length)
-      throw new HTTPException(400, {
-        message: `Emails duplicados no request: ${duplicatedInput.join(', ')}`,
-      })
+      return c.json({
+        error: `Emails duplicados no request: ${duplicatedInput.join(', ')}`,
+      }, 400)
 
     const existentes = await db
       .select({ email: schema.usuario.email })
@@ -51,9 +52,9 @@ export default new Hono().post(
 
     if (existentes.length) {
       const existentesEmails = existentes.map(r => r.email).join(', ')
-      throw new HTTPException(400, {
-        message: `Os seguintes emails já estão cadastrados: ${existentesEmails}`,
-      })
+      return c.json({
+        error: `Os seguintes emails já estão cadastrados: ${existentesEmails}`,
+      }, 400)
     }
 
     const toInsert: CadastroRequest = []
@@ -64,14 +65,14 @@ export default new Hono().post(
 
       if (i.permissao === 'admin')
         toInsert.push({
-          nome: i.nome,
+          nome: i.nome.trim(),
           email: i.email,
           senha: senhaHash,
           permissao: 'admin',
         })
       else
         toInsert.push({
-          nome: i.nome,
+          nome: i.nome.trim(),
           email: i.email,
           senha: senhaHash,
           permissao: 'estagiario',

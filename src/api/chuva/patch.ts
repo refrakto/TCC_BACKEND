@@ -1,4 +1,4 @@
 import { Hono } from "hono"
 import { acesso } from "utils/permissao"
 
-export default new Hono().post('/', acesso('admin'))
+export default new Hono().patch('/', acesso('estagiario'))

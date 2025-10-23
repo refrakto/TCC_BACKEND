@@ -137,7 +137,6 @@ if (import.meta.main) {
       development: serverConfig.development,
     })
 
-    console.log(`🚀 Backend rodando em http://localhost:${server.port}`)
     console.log(`📊 Ambiente: ${Bun.env.NODE_ENV || 'desenvolvimento'}`)
   } catch (error) {
     console.error('💥 Falha na inicialização:', error)

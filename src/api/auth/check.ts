@@ -32,12 +32,12 @@ export default new Hono().get('/', async c => {
     )[0]
 
     if (!usuario)
-      throw new HTTPException(401, { message: 'Usuário não encontrado' })
+      return c.json({ error: 'Usuário não encontrado' }, 401)
 
     if (usuario.permissao !== payload.permissao)
-      throw new HTTPException(401, {
-        message: 'Permissão de Token diferente da permissão da Conta',
-      })
+      return c.json({
+        error: 'Permissão de Token diferente da permissão da Conta',
+      }, 401)
 
     return c.json({
       usuario:
@@ -57,13 +57,7 @@ export default new Hono().get('/', async c => {
               dataFim: usuario.dataFim ?? undefined,
             },
     })
-  } catch (err) {
-    switch (err) {
-      case JWTInvalid:
-        throw new JwtTokenInvalid(token)
-      case JWTExpired:
-        throw new JwtTokenExpired(token)
-    }
-    throw new HTTPException(401, { message: 'Token inválido' })
+  } catch {
+    return c.json({ error: 'Token inválido ou expirado' }, 401)
   }
 })

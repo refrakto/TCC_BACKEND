@@ -5,7 +5,7 @@ import { eq } from 'drizzle-orm'
 import { HTTPException } from 'hono/http-exception'
 import { verify } from '@node-rs/argon2'
 import { SignJWT } from 'jose'
-import { EmailSchema, SenhaSchema } from 'utils/valibot'
+import { EmailSchema, SenhaSchema } from 'valibot/cadastro'
 import { object } from 'valibot'
 import { JWT_SECRET } from 'index'
 
@@ -29,10 +29,10 @@ export default new Hono().post(
     )[0]
 
     if (!usuario)
-      throw new HTTPException(401, { message: 'Usuário não encontrado.' })
+      return c.json({ error: 'Usuário não encontrado.' }, 401)
 
     if (!(await verify(usuario.senha, body.senha)))
-      throw new HTTPException(401, { message: 'Senha inválida.' })
+      return c.json({ error: 'Senha inválida.' }, 401)
 
     const token = await new SignJWT({
       id: usuario.id,

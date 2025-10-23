@@ -1,5 +1,3 @@
-import { Context } from "hono"
+import { Hono } from "hono"
 
-export default async (c: Context<{}, '/', BlankInput>) => {
-  c.
-}
+export default new Hono().get('/')

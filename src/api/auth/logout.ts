@@ -34,16 +34,9 @@ export default new Hono().post('/', async c => {
 
     return c.json({ success: true, message: 'Desconectado com sucesso' })
   } catch (err: any) {
-    switch (err) {
-      case JWTInvalid:
-        throw new JwtTokenInvalid(token)
-      case JWTExpired:
-        throw new JwtTokenExpired(token)
-      case HTTPException:
-        throw new HTTPException(401, {
-          message: 'Erro ao Desconectar: ' + err.message,
-        })
-    }
-    throw new HTTPException(401, { message: 'Token inválido' })
+    if (err === HTTPException)
+      return c.json({ error: 'Erro ao Desconectar: ' + err.message }, 401)
+
+    return c.json({ error: 'Token Inválido' }, 401)
   }
 })

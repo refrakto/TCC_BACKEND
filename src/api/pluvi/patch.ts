@@ -1,5 +1,4 @@
-import { Context } from "hono"
+import { Hono } from "hono"
+import { acesso } from "utils/permissao"
 
-export default async (c: Context<{}, '/', BlankInput>) => {
-  c.
-}
+export default new Hono().patch('/', acesso('admin'))
