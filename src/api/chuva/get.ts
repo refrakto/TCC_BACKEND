@@ -7,6 +7,7 @@ import { BunSQLDatabase } from 'drizzle-orm/bun-sql'
 import { jsonValidator } from 'utils/permissao'
 import { createHTTPException, handleDBError } from 'utils/errors'
 import { HTTPException } from 'hono/http-exception'
+import dayjs from 'dayjs'
 
 const getRequestSchema = union(
   [
@@ -15,7 +16,7 @@ const getRequestSchema = union(
       object({ dataPrimeira: DataSchema, dataUltima: DataSchema }),
       forward(
         check(
-          g => new Date(g.dataPrimeira) > new Date(g.dataUltima),
+          g => dayjs(g.dataUltima).isAfter(g.dataPrimeira, 'day'),
           'Data da primeira Chuva a selecionar é maior que data da última Chuva a selecionar.'
         ),
         ['dataUltima']

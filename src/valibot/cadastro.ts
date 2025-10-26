@@ -1,11 +1,8 @@
 import {
-  array,
   check,
   email,
   forward,
-  InferInput,
   intersect,
-  isoDate,
   literal,
   maxLength,
   minLength,
@@ -17,7 +14,8 @@ import {
   trim,
   union,
 } from 'valibot'
-import { DataSchema } from './comum'
+import { DataLivreSchema, DataSchema } from './comum'
+import dayjs from 'dayjs'
 
 export const NomeSchema = pipe(
   string(),
@@ -46,16 +44,16 @@ export const PermissaoSchema = union(
     pipe(
       object({
         permissao: literal('estagiario', 'Permissão inválida.'),
-        dataInicio: DataSchema,
-        dataFim: optional(DataSchema),
+        dataInicio: DataLivreSchema,
+        dataFim: optional(DataLivreSchema),
       }),
       forward(
-        check(i => !i.dataFim || new Date(i.dataInicio) < new Date(i.dataFim)),
+        check(i => !i.dataFim || dayjs(i.dataFim).isAfter(i.dataInicio)),
         ['dataFim']
       )
     ),
   ],
-  'Data de fim de Estágio maior que Data de início de Estágio.'
+  'Data de fim de Estágio igual ou maior que Data de início de Estágio.'
 )
 
 export const CadastroBaseSchema = object({

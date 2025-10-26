@@ -15,7 +15,7 @@ export const LoginRequestSchema = object({
 })
 
 export default new Hono().post(
-  '/',
+  '/login',
   jsonValidator(LoginRequestSchema),
   async c => {
     const db = c.get('db')

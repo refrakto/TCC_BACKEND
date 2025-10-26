@@ -4,6 +4,6 @@ import get from "./get";
 import patch from "./patch";
 
 export default new Hono()
-  .route('/', post)
-  .route('/', get)
-  .route('/', patch)
+  .route('/chuva', post)
+  .route('/chuva', get)
+  .route('/chuva', patch)

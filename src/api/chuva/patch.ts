@@ -138,10 +138,17 @@ export default new Hono().patch(
       return updates
     })
 
+    let media: number = 0
+
+    for (const medicao of medicoesAtualizadas) {
+        media += medicao.quantidadeMm
+      }
+      media = Math.round((media + Number.EPSILON) * 100) / 100
+
     return c.json(
       {
         message: 'Chuva atualizada com sucesso.',
-        chuva: { ...chuvaExistente, medicoes: medicoesAtualizadas },
+        chuva: { ...chuvaExistente, media, medicoes: medicoesAtualizadas },
       },
       200
     )

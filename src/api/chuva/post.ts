@@ -115,7 +115,16 @@ export default new Hono().post(
           handleDBError(c, 'Erro ao inserir medições no banco de dados.')
         )
 
-      return { ...chuva, medicoes: medicoesInseridas }
+      let media: number = 0
+
+      for (const medicao of medicoesInseridas) {
+        media += medicao.quantidadeMm
+      }
+      media = Math.round((media + Number.EPSILON) * 100) / 100
+
+      const chuvaComMedia = { ...chuva, media }
+
+      return { ...chuvaComMedia, medicoes: medicoesInseridas }
     })
 
     return c.json({ chuva: retorno }, 201)

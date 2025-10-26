@@ -4,8 +4,10 @@ import { eq } from 'drizzle-orm'
 import * as schema from 'database'
 import { JWT_SECRET } from 'index'
 import { createHTTPException, handleDBError, handleJWTError } from 'utils/errors'
+import { vValidator } from '@hono/valibot-validator'
+import { HeaderBearerSchema } from 'valibot/comum'
 
-export default new Hono().post('/', async c => {
+export default new Hono().post('/logout',vValidator('header', HeaderBearerSchema), async c => {
   const db = c.get('db')
   const authHeader = c.req.header('Authorization')
   const token = authHeader?.split(' ')[1]

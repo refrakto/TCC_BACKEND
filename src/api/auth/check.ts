@@ -8,8 +8,10 @@ import {
   handleDBError,
   handleJWTError,
 } from 'utils/errors'
+import { vValidator } from '@hono/valibot-validator'
+import { HeaderBearerSchema } from 'valibot/comum'
 
-export default new Hono().get('/', async c => {
+export default new Hono().get('/check',vValidator('header', HeaderBearerSchema), async c => {
   const db = c.get('db')
   const authHeader = c.req.header('Authorization')
   const token = authHeader?.split(' ')[1]

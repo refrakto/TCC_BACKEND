@@ -1,4 +1,7 @@
+import dayjs from 'dayjs'
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import {
+  check,
   finite,
   integer,
   isoDate,
@@ -16,6 +19,12 @@ export function hasScale(value: number, scale: number) {
 }
 
 export const DataSchema = pipe(
+  string(),
+  isoDate('Formatação Inválida de Data.'),
+  check(d => dayjs(d).isSameOrBefore(dayjs(), 'day'), 'Não é possível utilizar Data futura neste campo.')
+)
+
+export const DataLivreSchema = pipe(
   string(),
   isoDate('Formatação Inválida de Data.')
 )
