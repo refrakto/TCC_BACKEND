@@ -1,15 +1,14 @@
-import { vValidator } from '@hono/valibot-validator'
 import { Hono } from 'hono'
-import { acesso } from 'utils/permissao'
+import { acesso, jsonValidator } from 'utils/permissao'
 import { ChuvaSchema } from 'valibot/chuva'
 import * as schema from 'database'
 import { eq, inArray } from 'drizzle-orm'
-import { HTTPException } from 'hono/http-exception'
+import { createHTTPException, handleDBError } from 'utils/errors'
 
 export default new Hono().post(
   '/',
   acesso('estagiario'),
-  vValidator('json', ChuvaSchema),
+  jsonValidator(ChuvaSchema),
   async c => {
     const db = c.get('db')
     const body = c.req.valid('json')
@@ -18,82 +17,107 @@ export default new Hono().post(
       .select()
       .from(schema.chuva)
       .where(eq(schema.chuva.data, body.data))
-
-    if (existente.length)
-      return c.json(
-        { error: `Chuva já registrada na data ${existente[0].data}.` },
-        400
+      .catch(c =>
+        handleDBError(
+          c,
+          'Erro ao selecionar chuva existente no banco de dados.'
+        )
       )
 
-    const MedicoesID = body.medicoes.map(m => m.idPluvi)
+    if (existente.length)
+      throw createHTTPException(
+        400,
+        `Chuva já registrada na data ${existente[0].data}.`,
+        `Data ${existente[0].data} identificada na tabela chuva do banco de dados.`
+      )
+
+    const medicoesIdPluvi = body.medicoes.map(m => m.idPluvi)
 
     const listaPluvis = await db
       .select()
       .from(schema.pluviometro)
-      .where(inArray(schema.pluviometro.id, MedicoesID))
-
-    if (listaPluvis.length < MedicoesID.length)
-      return c.json(
-        { error: 'Medição selecionou pluviômetro inexistente.' },
-        400
+      .where(inArray(schema.pluviometro.id, medicoesIdPluvi))
+      .catch(c =>
+        handleDBError(c, 'Erro ao selecionar pluviometros no banco de dados.')
       )
 
-    let errors: object[] = []
+    const pluvisId = listaPluvis.map(p => p.id)
+
+    const pluvisInexistentes = medicoesIdPluvi.filter(
+      m => !pluvisId.includes(m)
+    )
+
+    if (pluvisInexistentes.length)
+      throw createHTTPException(
+        400,
+        {
+          message: `Não existem pluviômetros com os IDs ${pluvisInexistentes}.`,
+          inexistentes: pluvisInexistentes,
+        },
+        'Array listaPluvis menor que array medicoesIdPluvi'
+      )
+
+    const errors: object[] = []
 
     for (const [i, medicao] of body.medicoes.entries()) {
-      const pluvi = listaPluvis.find(p => p.id === medicao.idPluvi)
-
-      if (!pluvi) {
-        errors.push({
-          message: `Medição de índice ${i} seleciona pluviômetro inexistente.`,
-        })
-        continue
-      }
+      const pluvi = listaPluvis.find(p => p.id === medicao.idPluvi)!
 
       if (pluvi.arquivado) {
-        errors.push({
-          message: `Medição de índice ${i} seleciona pluviômetro arquivado.`,
-        })
+        errors.push(
+          await createHTTPException(
+            400,
+            `Medição de índice ${i} seleciona pluviômetro arquivado.`
+          )
+            .getResponse()
+            .json()
+        )
         continue
       }
 
       if (medicao.quantidadeMm > pluvi.capacidadeMm) {
-        errors.push({
-          message: `Medição de índice ${i} tem medida maior que capacidade de pluviômetro.`,
-        })
+        errors.push(
+          await createHTTPException(
+            400,
+            `Medição de índice ${i} tem medida maior que capacidade do pluviômetro.`
+          )
+            .getResponse()
+            .json()
+        )
       }
     }
 
-    if (errors.length) return c.json({ errors: errors }, 400)
-
-    const chuva = await db
-      .insert(schema.chuva)
-      .values({ data: body.data })
-      .returning()
-      .catch(cause => {
-        throw new HTTPException(500, {
-          message: 'Erro ao inserir Chuva no banco de dados.',
-          cause,
-        })
+    if (errors.length)
+      throw createHTTPException(400, {
+        message: 'Medições incoerentes com pluviômetros selecionados',
+        errors: errors,
       })
 
-    let insert: ((typeof body.medicoes)[0] & { idChuva: number })[] = []
+    const retorno = await db.transaction(async tx => {
+      const [chuva] = await tx
+        .insert(schema.chuva)
+        .values({ data: body.data })
+        .returning()
+        .catch(c =>
+          handleDBError(c, 'Erro ao inserir chuva no banco de dados.')
+        )
 
-    for (const [i] of body.medicoes.entries()) {
-      insert[i] = {
-        idPluvi: body.medicoes[i].idPluvi,
-        quantidadeMm: body.medicoes[i].quantidadeMm,
-        idChuva: chuva[0].id,
-      }
-    }
+      let insert = body.medicoes.map(m => ({
+        idPluvi: m.idPluvi,
+        quantidadeMm: m.quantidadeMm,
+        idChuva: chuva.id,
+      }))
 
-    db.insert(schema.medicao)
-      .values(insert)
-      .catch(cause => {
-        throw new HTTPException(500, {
-          message: 'Erro ao inserir Medição no banco de dados.',
-          cause,
-        })
-      })
+      const medicoesInseridas = await tx
+        .insert(schema.medicao)
+        .values(insert)
+        .returning()
+        .catch(c =>
+          handleDBError(c, 'Erro ao inserir medições no banco de dados.')
+        )
+
+      return { ...chuva, medicoes: medicoesInseridas }
+    })
+
+    return c.json({ chuva: retorno }, 201)
   }
 )

@@ -4,8 +4,9 @@ import { CadastroSchema } from 'valibot/cadastro'
 import * as schema from 'database'
 import { inArray } from 'drizzle-orm'
 import { hash } from '@node-rs/argon2'
-import { array, InferInput, minLength, pipe } from 'valibot'
+import { array, flatten, InferInput, minLength, pipe } from 'valibot'
 import { acesso } from 'utils/permissao'
+import { createHTTPException, handleDBError } from 'utils/errors'
 
 export const CadastroArraySchema = pipe(
   array(CadastroSchema, 'Array de cadastros inválido'),
@@ -19,14 +20,10 @@ export default new Hono().post(
   acesso('admin'),
   vValidator('json', CadastroArraySchema, (r, c) => {
     if (!r.success) {
-      const formattedIssues = r.issues.map(i => ({
-        field: i.path?.[0]?.key,
-        message: i.message,
-      }))
-      return c.json({
-        message: 'Erro de Validação',
-        cause: formattedIssues,
-      }, 422)
+      return c.json(
+        { message: 'Erro de Validação', errors: flatten(r.issues)  },
+        422
+      )
     }
   }),
   async c => {
@@ -41,20 +38,26 @@ export default new Hono().post(
       .map(([e]) => e)
 
     if (duplicatedInput.length)
-      return c.json({
-        error: `Emails duplicados no request: ${duplicatedInput.join(', ')}`,
-      }, 400)
+      throw createHTTPException(400,
+        `Emails duplicados no request: ${duplicatedInput.join(', ')}`
+      )
 
     const existentes = await db
       .select({ email: schema.usuario.email })
       .from(schema.usuario)
       .where(inArray(schema.usuario.email, emails))
+      .catch(c =>
+        handleDBError(
+          c,
+          'Erro ao selecionar contas existentes no banco de dados.'
+        )
+      )
 
     if (existentes.length) {
       const existentesEmails = existentes.map(r => r.email).join(', ')
-      return c.json({
-        error: `Os seguintes emails já estão cadastrados: ${existentesEmails}`,
-      }, 400)
+      throw createHTTPException(400,
+        `Os seguintes emails já estão cadastrados: ${existentesEmails}`
+      )
     }
 
     const toInsert: CadastroRequest = []
@@ -85,6 +88,9 @@ export default new Hono().post(
       .insert(schema.usuario)
       .values(toInsert)
       .returning()
+      .catch(c =>
+        handleDBError(c, 'Erro ao inserir usuários no banco de dados.')
+      )
 
     for (const r of inserted)
       if (r.permissao === 'admin')

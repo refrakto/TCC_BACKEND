@@ -1,13 +1,13 @@
-import { vValidator } from '@hono/valibot-validator'
 import { Hono } from 'hono'
 import * as schema from 'database'
 import { eq } from 'drizzle-orm'
-import { HTTPException } from 'hono/http-exception'
 import { verify } from '@node-rs/argon2'
 import { SignJWT } from 'jose'
 import { EmailSchema, SenhaSchema } from 'valibot/cadastro'
 import { object } from 'valibot'
 import { JWT_SECRET } from 'index'
+import { jsonValidator } from 'utils/permissao'
+import { createHTTPException, handleDBError } from 'utils/errors'
 
 export const LoginRequestSchema = object({
   email: EmailSchema,
@@ -16,23 +16,25 @@ export const LoginRequestSchema = object({
 
 export default new Hono().post(
   '/',
-  vValidator('json', LoginRequestSchema),
+  jsonValidator(LoginRequestSchema),
   async c => {
     const db = c.get('db')
     const body = c.req.valid('json')
 
-    const usuario = (
+    const [usuario] = (
       await db
         .select()
         .from(schema.usuario)
         .where(eq(schema.usuario.email, body.email.toLowerCase().trim()))
-    )[0]
+        .catch(c => handleDBError(c, 'Erro ao selecionar usuário no banco de dados.')
+          )
+    )
 
     if (!usuario)
-      return c.json({ error: 'Usuário não encontrado.' }, 401)
+      throw createHTTPException(404, 'Usuário não encontrado.', 'usuario == undefined')
 
     if (!(await verify(usuario.senha, body.senha)))
-      return c.json({ error: 'Senha inválida.' }, 401)
+      throw createHTTPException(401, 'Senha inválida.', 'Verificação de senha retornou falso.')
 
     const token = await new SignJWT({
       id: usuario.id,

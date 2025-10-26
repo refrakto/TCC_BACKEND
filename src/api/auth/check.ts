@@ -1,11 +1,13 @@
 import { Hono } from 'hono'
-import { HTTPException } from 'hono/http-exception'
-import { JwtTokenExpired, JwtTokenInvalid } from 'hono/utils/jwt/types'
 import { jwtVerify } from 'jose'
-import { JWTExpired, JWTInvalid } from 'jose/errors'
 import { eq } from 'drizzle-orm'
 import * as schema from 'database'
 import { JWT_SECRET } from 'index'
+import {
+  createHTTPException,
+  handleDBError,
+  handleJWTError,
+} from 'utils/errors'
 
 export default new Hono().get('/', async c => {
   const db = c.get('db')
@@ -13,51 +15,59 @@ export default new Hono().get('/', async c => {
   const token = authHeader?.split(' ')[1]
 
   if (!token)
-    throw new HTTPException(401, { message: 'Nenhum token providenciado' })
+    throw createHTTPException(401, 'Nenhum token providenciado', 'Requisição sem Header ou sem token após Bearer.')
 
-  try {
-    const { payload } = await jwtVerify(token, JWT_SECRET)
-    const usuario = (
-      await db
-        .select({
-          id: schema.usuario.id,
-          nome: schema.usuario.nome,
-          email: schema.usuario.email,
-          permissao: schema.usuario.permissao,
-          dataInicio: schema.usuario.dataInicio,
-          dataFim: schema.usuario.dataFim,
-        })
-        .from(schema.usuario)
-        .where(eq(schema.usuario.id, payload.id as number))
-    )[0]
+  const { payload } = await jwtVerify(token, JWT_SECRET).catch(e => {
+    throw handleJWTError(e)
+  })
 
-    if (!usuario)
-      return c.json({ error: 'Usuário não encontrado' }, 401)
+  const [usuario] = (
+    await db
+      .select({
+        id: schema.usuario.id,
+        nome: schema.usuario.nome,
+        email: schema.usuario.email,
+        permissao: schema.usuario.permissao,
+        dataInicio: schema.usuario.dataInicio,
+        dataFim: schema.usuario.dataFim,
+      })
+      .from(schema.usuario)
+      .where(eq(schema.usuario.id, payload.id as number))
+      .catch(c =>
+        handleDBError(c, 'Erro ao selecionar usuário no banco de dados.')
+      )
+  )
 
-    if (usuario.permissao !== payload.permissao)
-      return c.json({
-        error: 'Permissão de Token diferente da permissão da Conta',
-      }, 401)
+  if (!usuario)
+    throw createHTTPException(
+      401,
+      'Usuário não encontrado',
+      'usuario == undefined'
+    )
 
-    return c.json({
-      usuario:
-        usuario.permissao === 'admin'
-          ? {
-              id: usuario.id,
-              nome: usuario.nome,
-              email: usuario.email,
-              permissao: usuario.permissao,
-            }
-          : {
-              id: usuario.id,
-              nome: usuario.nome,
-              email: usuario.email,
-              permissao: usuario.permissao,
-              dataInicio: usuario.dataInicio,
-              dataFim: usuario.dataFim ?? undefined,
-            },
-    })
-  } catch {
-    return c.json({ error: 'Token inválido ou expirado' }, 401)
-  }
+  if (usuario.permissao !== payload.permissao)
+    throw createHTTPException(
+      401,
+      'Permissão de Token diferente da permissão da Conta',
+      'usuario.permissao !== payload.permissao'
+    )
+
+  return c.json({
+    usuario:
+      usuario.permissao === 'admin'
+        ? {
+            id: usuario.id,
+            nome: usuario.nome,
+            email: usuario.email,
+            permissao: usuario.permissao,
+          }
+        : {
+            id: usuario.id,
+            nome: usuario.nome,
+            email: usuario.email,
+            permissao: usuario.permissao,
+            dataInicio: usuario.dataInicio,
+            dataFim: usuario.dataFim ?? undefined,
+          },
+  })
 })

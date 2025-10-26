@@ -1,11 +1,9 @@
 import { Hono } from 'hono'
-import { HTTPException } from 'hono/http-exception'
-import { JwtTokenExpired, JwtTokenInvalid } from 'hono/utils/jwt/types'
 import { jwtVerify } from 'jose'
-import { JWTExpired, JWTInvalid } from 'jose/errors'
 import { eq } from 'drizzle-orm'
 import * as schema from 'database'
 import { JWT_SECRET } from 'index'
+import { createHTTPException, handleDBError, handleJWTError } from 'utils/errors'
 
 export default new Hono().post('/', async c => {
   const db = c.get('db')
@@ -13,30 +11,30 @@ export default new Hono().post('/', async c => {
   const token = authHeader?.split(' ')[1]
 
   if (!token)
-    throw new HTTPException(401, { message: 'Nenhum token providenciado' })
+    throw createHTTPException(401, 'Nenhum token providenciado', 'Requisição sem Header ou sem token após Bearer.')
 
-  try {
-    const { payload } = await jwtVerify(token, JWT_SECRET)
-    const usuario = (
-      await db
-        .select({ permissao: schema.usuario.permissao })
-        .from(schema.usuario)
-        .where(eq(schema.usuario.id, payload.id as number))
-    )[0]
+  const { payload } = await jwtVerify(token, JWT_SECRET).catch(e => {
+    throw handleJWTError(e)
+  })
+  const [usuario] = (
+    await db
+      .select({ permissao: schema.usuario.permissao })
+      .from(schema.usuario)
+      .where(eq(schema.usuario.id, payload.id as number))
+      .catch(c => handleDBError(c, 'Erro ao selecionar usuário no banco de dados.'))
+  )
 
-    if (!usuario)
-      throw new HTTPException(401, { message: 'Usuário não encontrado' })
+  if (!usuario)
+    throw createHTTPException(404,
+      'Usuário não encontrado',
+      'usuario == undefined'
+    )
 
-    if (usuario.permissao !== payload.permissao)
-      throw new HTTPException(401, {
-        message: 'Permissão de Token diferente da permissão da Conta',
-      })
+  if (usuario.permissao !== payload.permissao)
+    throw createHTTPException(401,
+      'Permissão de Token diferente da permissão da Conta',
+      'usuario.permissao !== payload.permissao',
+    )
 
-    return c.json({ success: true, message: 'Desconectado com sucesso' })
-  } catch (err: any) {
-    if (err === HTTPException)
-      return c.json({ error: 'Erro ao Desconectar: ' + err.message }, 401)
-
-    return c.json({ error: 'Token Inválido' }, 401)
-  }
+  return c.json({ success: true, message: 'Desconectado com sucesso' })
 })
