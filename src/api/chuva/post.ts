@@ -1,15 +1,15 @@
 import { Hono } from 'hono'
-import { acesso, jsonValidator } from 'utils/permissao'
-import { ChuvaSchema } from 'valibot/chuva'
-import * as schema from 'database'
+import { acesso, jsonValidator } from '@/utils/permissao.ts'
+import { ChuvaSchema } from '@/valibot/chuva.ts'
+import * as schema from '@/database/main.ts'
 import { eq, inArray } from 'drizzle-orm'
-import { createHTTPException, handleDBError } from 'utils/errors'
+import { createHTTPException, handleDBError } from '@/utils/errors.ts'
 
 export default new Hono().post(
   '/',
   acesso('estagiario'),
   jsonValidator(ChuvaSchema),
-  async c => {
+  async (c) => {
     const db = c.get('db')
     const body = c.req.valid('json')
 
@@ -17,59 +17,59 @@ export default new Hono().post(
       .select()
       .from(schema.chuva)
       .where(eq(schema.chuva.data, body.data))
-      .catch(c =>
+      .catch((c) =>
         handleDBError(
           c,
-          'Erro ao selecionar chuva existente no banco de dados.'
+          'Erro ao selecionar chuva existente no banco de dados.',
         )
       )
 
-    if (existente.length)
+    if (existente.length) {
       throw createHTTPException(
         400,
         `Chuva já registrada na data ${existente[0].data}.`,
-        `Data ${existente[0].data} identificada na tabela chuva do banco de dados.`
+        `Data ${existente[0].data} identificada na tabela chuva do banco de dados.`,
       )
+    }
 
-    const medicoesIdPluvi = body.medicoes.map(m => m.idPluvi)
+    const medicoesIdPluvi = body.medicoes.map((m) => m.idPluvi)
 
     const listaPluvis = await db
       .select()
       .from(schema.pluviometro)
       .where(inArray(schema.pluviometro.id, medicoesIdPluvi))
-      .catch(c =>
-        handleDBError(c, 'Erro ao selecionar pluviometros no banco de dados.')
-      )
+      .catch((c) => handleDBError(c, 'Erro ao selecionar pluviometros no banco de dados.'))
 
-    const pluvisId = listaPluvis.map(p => p.id)
+    const pluvisId = listaPluvis.map((p) => p.id)
 
     const pluvisInexistentes = medicoesIdPluvi.filter(
-      m => !pluvisId.includes(m)
+      (m) => !pluvisId.includes(m),
     )
 
-    if (pluvisInexistentes.length)
+    if (pluvisInexistentes.length) {
       throw createHTTPException(
         400,
         {
           message: `Não existem pluviômetros com os IDs ${pluvisInexistentes}.`,
           inexistentes: pluvisInexistentes,
         },
-        'Array listaPluvis menor que array medicoesIdPluvi'
+        'Array listaPluvis menor que array medicoesIdPluvi',
       )
+    }
 
     const errors: object[] = []
 
     for (const [i, medicao] of body.medicoes.entries()) {
-      const pluvi = listaPluvis.find(p => p.id === medicao.idPluvi)!
+      const pluvi = listaPluvis.find((p) => p.id === medicao.idPluvi)!
 
       if (pluvi.arquivado) {
         errors.push(
           await createHTTPException(
             400,
-            `Medição de índice ${i} seleciona pluviômetro arquivado.`
+            `Medição de índice ${i} seleciona pluviômetro arquivado.`,
           )
             .getResponse()
-            .json()
+            .json(),
         )
         continue
       }
@@ -78,30 +78,29 @@ export default new Hono().post(
         errors.push(
           await createHTTPException(
             400,
-            `Medição de índice ${i} tem medida maior que capacidade do pluviômetro.`
+            `Medição de índice ${i} tem medida maior que capacidade do pluviômetro.`,
           )
             .getResponse()
-            .json()
+            .json(),
         )
       }
     }
 
-    if (errors.length)
+    if (errors.length) {
       throw createHTTPException(400, {
         message: 'Medições incoerentes com pluviômetros selecionados',
         errors: errors,
       })
+    }
 
-    const retorno = await db.transaction(async tx => {
+    const retorno = await db.transaction(async (tx) => {
       const [chuva] = await tx
         .insert(schema.chuva)
         .values({ data: body.data })
         .returning()
-        .catch(c =>
-          handleDBError(c, 'Erro ao inserir chuva no banco de dados.')
-        )
+        .catch((c) => handleDBError(c, 'Erro ao inserir chuva no banco de dados.'))
 
-      let insert = body.medicoes.map(m => ({
+      const insert = body.medicoes.map((m) => ({
         idPluvi: m.idPluvi,
         quantidadeMm: m.quantidadeMm,
         idChuva: chuva.id,
@@ -111,9 +110,7 @@ export default new Hono().post(
         .insert(schema.medicao)
         .values(insert)
         .returning()
-        .catch(c =>
-          handleDBError(c, 'Erro ao inserir medições no banco de dados.')
-        )
+        .catch((c) => handleDBError(c, 'Erro ao inserir medições no banco de dados.'))
 
       let media: number = 0
 
@@ -128,5 +125,5 @@ export default new Hono().post(
     })
 
     return c.json({ chuva: retorno }, 201)
-  }
+  },
 )

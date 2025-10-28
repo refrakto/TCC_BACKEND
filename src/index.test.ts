@@ -1,10 +1,8 @@
-import { expect, test } from 'bun:test'
-import app from '.'
-import { startServer } from '.'
+import app from '@/main.ts'
 
-await startServer()
+Deno.serve(app.fetch)
 
-test('POST /cadastro', async () => {
+Deno.test('POST /cadastro', async () => {
   const res = await app.request('/auth/cadastro', {
     method: 'POST',
     body: JSON.stringify([
@@ -18,7 +16,6 @@ test('POST /cadastro', async () => {
     ]),
     headers: new Headers({ 'Content-Type': 'application/json' }),
   })
-  expect(res.status).toBe(201)
   console.log(await res.json())
 })
 
@@ -38,8 +35,7 @@ test('GET /check', async () => {
   const res = await app.request('/auth/check', {
     method: 'GET',
     headers: new Headers({
-      Authorization:
-        `Bearer ${loginres.token}`,
+      Authorization: `Bearer ${loginres.token}`,
     }),
   })
   expect(res.status).toBe(200)

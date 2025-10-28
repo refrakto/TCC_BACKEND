@@ -1,5 +1,5 @@
-import { drizzle } from 'drizzle-orm/bun-sql'
-import * as schema from 'database'
+import { drizzle } from 'drizzle-orm/node-postgres'
+import * as schema from '@/database/main.ts'
 import { JWTPayload } from 'jose'
 
 declare module 'hono' {

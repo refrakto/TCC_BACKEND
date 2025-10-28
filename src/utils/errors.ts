@@ -5,9 +5,9 @@ import { JOSEError, JWTExpired } from 'jose/errors'
 export function createHTTPException(
   status: ContentfulStatusCode,
   body: { message: string } & Record<string, any> | string,
-  cause?: unknown
+  cause?: unknown,
 ) {
-  const finalBody = typeof body === 'string' ? { message: body } : body;
+  const finalBody = typeof body === 'string' ? { message: body } : body
   return new HTTPException(status, {
     message: finalBody.message,
     cause,
@@ -19,8 +19,9 @@ export function createHTTPException(
 }
 
 export const handleJWTError = (cause: JOSEError) => {
-  if (cause instanceof JWTExpired)
+  if (cause instanceof JWTExpired) {
     throw createHTTPException(401, 'Autenticação Expirada', cause.code)
+  }
 
   throw createHTTPException(401, 'Autenticação Inválida', cause.code)
 }

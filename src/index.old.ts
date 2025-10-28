@@ -1,6 +1,6 @@
 import { drizzle } from 'drizzle-orm/bun-sql'
 import { Hono } from 'hono'
-import * as schema from './database'
+import * as schema from '@/database/main.ts'
 
 const app = new Hono()
 
@@ -15,7 +15,7 @@ export const JWT_SECRET = new TextEncoder().encode(Bun.env.JWT_SECRET)
 
 if (!DB_USUARIO || !DB_SENHA || !DB_NOME) {
   throw new Error(
-    'As variáveis de ambiente do banco de dados devem ser definidas.'
+    'As variáveis de ambiente do banco de dados devem ser definidas.',
   )
 }
 
@@ -27,8 +27,8 @@ app.use('*', async (c, next) => {
   c.set(
     'db',
     drizzle<typeof schema>(
-      `postgresql://${DB_USUARIO}:${DB_SENHA}@${DB_HOST}:${DB_PORT}/${DB_NOME}`
-    )
+      `postgresql://${DB_USUARIO}:${DB_SENHA}@${DB_HOST}:${DB_PORT}/${DB_NOME}`,
+    ),
   )
   await next()
 })
@@ -59,15 +59,15 @@ async function loadRoutes() {
     // Use Bun.glob instead of glob package
     const glob = new Bun.Glob('src/api/**/*.{ts,js}')
     const files = Array.from(
-      glob.scanSync({ cwd: process.cwd(), absolute: false, onlyFiles: true })
+      glob.scanSync({ cwd: process.cwd(), absolute: false, onlyFiles: true }),
     ).filter(
-      file =>
+      (file) =>
         !file.includes('.test.') &&
         !file.includes('.spec.') &&
         !file.includes('__tests__') &&
         !file.endsWith('\\post.ts') &&
         !file.endsWith('\\get.ts') &&
-        !file.endsWith('\\patch.ts') 
+        !file.endsWith('\\patch.ts'),
     )
 
     console.log(`📁 Encontrados ${files.length} arquivos de rota`)
@@ -79,7 +79,7 @@ async function loadRoutes() {
 
         if (!routeModule.default || typeof routeModule.default !== 'object') {
           console.warn(
-            `⚠️  Arquivo ignorado (sem export default válido): ${file}`
+            `⚠️  Arquivo ignorado (sem export default válido): ${file}`,
           )
           continue
         }
@@ -117,7 +117,7 @@ process.on('beforeExit', () => {
   console.log('🛑 Desligando Servidor...')
 })
 
-process.on('uncaughtException', error => {
+process.on('uncaughtException', (error) => {
   console.error('💥 Uncaught exception:', error)
   process.exit(1)
 })
@@ -143,7 +143,6 @@ if (import.meta.main) {
     process.exit(1)
   }
 }
-
 
 export type AppType = typeof app
 export default app

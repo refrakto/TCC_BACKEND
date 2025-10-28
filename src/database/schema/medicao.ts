@@ -1,6 +1,6 @@
 import { decimal, integer, pgTable, primaryKey } from 'drizzle-orm/pg-core'
-import { pluviometro } from './pluviometro'
-import { chuva } from './chuva'
+import { pluviometro } from './pluviometro.ts'
+import { chuva } from './chuva.ts'
 
 export const medicao = pgTable(
   'medicao',
@@ -13,7 +13,7 @@ export const medicao = pgTable(
       .references(() => chuva.id, { onDelete: 'cascade' }),
     quantidadeMm: decimal({ precision: 5, scale: 2, mode: 'number' }).notNull(),
   },
-  table => [primaryKey({ columns: [table.idPluvi, table.idChuva] })]
+  (table) => [primaryKey({ columns: [table.idPluvi, table.idChuva] })],
 )
 
 export type Medicao = typeof medicao.$inferSelect

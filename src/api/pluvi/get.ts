@@ -1,3 +1,3 @@
-import { Hono } from "hono"
+import { Hono } from 'hono'
 
 export default new Hono().get('/')
