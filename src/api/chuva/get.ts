@@ -48,7 +48,10 @@ export default new Hono().get('/', jsonValidator(getRequestSchema), async (c) =>
 
     const retorno = await getChuva(chuva, db)
 
-    return c.json({ chuva: retorno }, 200)
+    return c.json({
+      message: 'Chuva enviada com sucesso.',
+      chuva: retorno,
+    }, 200)
   }
 
   const chuvas = await db
@@ -95,10 +98,17 @@ export default new Hono().get('/', jsonValidator(getRequestSchema), async (c) =>
   }
 
   if (errors.length) {
-    return c.json({ chuvas: { sucessos }, errors }, 207)
+    return c.json({
+      message: 'Sucesso parcial ao enviar chuvas.',
+      chuvas: { sucessos },
+      errors,
+    }, 207)
   }
 
-  return c.json({ chuvas: { sucessos } }, 200)
+  return c.json({
+    message: 'Chuvas enviadas com sucesso.',
+    chuvas: { sucessos },
+  }, 200)
 })
 
 async function getChuva(
@@ -120,10 +130,7 @@ async function getChuva(
   }
 
   let media: number = 0
-
-  for (const medicao of medicoes) {
-    media += medicao.quantidadeMm
-  }
+  medicoes.forEach((m) => media += m.quantidadeMm)
   media = Math.round((media + Number.EPSILON) * 100) / 100
 
   return { id: chuva.id, data: chuva.data, media, medicoes }

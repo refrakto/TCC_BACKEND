@@ -14,7 +14,7 @@ export const DB_USUARIO = Deno.env.get('DB_USUARIO')
 export const DB_SENHA = Deno.env.get('DB_SENHA')
 export const DB_NOME = Deno.env.get('DB_NOME')
 export const DB_HOST = Deno.env.get('DB_HOST') ?? 'localhost'
-export const DB_PORT = Deno.env.get('DB_HOST') ?? '5432'
+export const DB_PORT = Deno.env.get('DB_PORT') ?? '5432'
 
 export const JWT_SECRET = new TextEncoder().encode(
   Deno.env.get('JWT_SECRET'),

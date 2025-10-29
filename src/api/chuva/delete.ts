@@ -48,10 +48,20 @@ export default new Hono().delete(
       .returning()
       .catch((c) => handleDBError(c, 'Erro ao deletar chuva no banco de dados.'))
 
+    let media: number = 0
+    medicoes.forEach((m) => media += m.quantidadeMm)
+    media = Math.round((media + Number.EPSILON) * 100) / 100
+
+    const deletado = {
+      ...chuvaDeletada,
+      medicoes,
+      media,
+    }
+
     return c.json(
       {
         message: 'Chuva e medições deletadas com sucesso.',
-        deletado: { chuva: chuvaDeletada, medicoes },
+        chuva: deletado,
       },
       200,
     )

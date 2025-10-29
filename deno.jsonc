@@ -23,7 +23,7 @@
   },
   "tasks": {
     "start": "deno run --allow-env --allow-net --allow-read --allow-write --allow-ffi src/main.ts",
-    "drizzle": "deno run -A npm:drizzle-kit"
+    "drizzle": "npm i && npx drizzle-kit"
   },
   "compilerOptions": {
     "jsx": "precompile",
@@ -57,5 +57,5 @@
       "ffi": ["$HOME/.deno/plug/**/*.dll"]
     }
   },
-  "nodeModulesDir": "auto"
+  "nodeModulesDir": "none"
 }
