@@ -57,8 +57,8 @@ correspondente.
 {
   status: 200,
   body: {
-    message: 'Chuva enviada com sucesso.',             
-    chuva: ChuvaGET         
+    message: 'Chuva enviada com sucesso.',
+    chuva: ChuvaGET
   }
 }
 ```
@@ -133,7 +133,7 @@ primeira até a última.
 >   medicoes: {
 >     idPluvi: number
 >     quantidadeMm: number // Precisão 5, escala 2 (Exemplo: 999,99)
->   }
+>   }[]
 > }
 > ```
 
@@ -162,7 +162,7 @@ primeira até a última.
   status: 201,
   body: {
     message: 'Chuva e medições inseridas com sucesso.',
-    chuva: ChuvaGET         
+    chuva: ChuvaGET
   }
 }
 ```
@@ -213,8 +213,8 @@ primeira até a última.
 {
   status: 200,
   body: {
-    message: 'Medições atualizadas com sucesso.'       
-    chuva: ChuvaGET         
+    message: 'Medições atualizadas com sucesso.',      
+    chuva: ChuvaGET
   }
 }
 ```
@@ -241,13 +241,7 @@ primeira até a última.
   header: {
     authorization: 'Bearer ...'
   },
-  body: Identificador & {
-    medicoes: {
-      idPluvi: number,
-      quantidadeMm: number
-      //Precisão 5, escala 2
-    }[]
-  }
+  body: Identificador
 }
 ```
 
@@ -258,7 +252,7 @@ primeira até a última.
   status: 200,
   body: {
     message: 'Chuva e medições deletadas com sucesso.',
-    chuva: ChuvaGET         
+    chuva: ChuvaGET
   }
 }
 ```
