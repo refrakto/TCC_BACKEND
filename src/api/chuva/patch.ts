@@ -20,13 +20,14 @@ export default new Hono().patch(
     const body = c.req.valid('json')
 
     const usaData = 'data' in body
+    const usaId = 'id' in body
+    
+    const compare = usaData ? eq(schema.chuva.data, body.data) : eq(schema.chuva.id, body.id)
 
     const [chuvaExistente] = await db
       .select()
       .from(schema.chuva)
-      .where(
-        usaData ? eq(schema.chuva.data, body.data) : eq(schema.chuva.id, body.id),
-      )
+      .where(compare)
       .catch((c) => handleDBError(c, 'Erro ao selecionar chuva no banco de dados.'))
 
     if (!chuvaExistente) {
@@ -41,6 +42,14 @@ export default new Hono().patch(
           `Chuva com id ${body.id} não encontrada.`,
           `Id ${body.id} não identificado na tabela chuva do banco de dados.`,
         )
+    }
+
+    if (usaData && usaId && chuvaExistente.id !== body.id) {
+      throw createHTTPException(
+        400,
+        `Chuva com data ${body.data} não corresponde ao id ${body.id}.`,
+        `Data ${body.data} e id ${body.id} em linhas diferentes da tabela chuva do banco de dados.`,
+      )
     }
 
     const medicoes = await db

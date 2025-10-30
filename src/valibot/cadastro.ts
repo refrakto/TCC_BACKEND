@@ -14,7 +14,7 @@ import {
   trim,
   union,
 } from 'valibot'
-import { DataLivreSchema } from './comum.ts'
+import { DataLivreSchema, IDSchema } from './comum.ts'
 import dayjs from 'dayjs'
 
 export const NomeSchema = pipe(
@@ -63,3 +63,9 @@ export const CadastroBaseSchema = object({
 })
 
 export const CadastroSchema = intersect([CadastroBaseSchema, PermissaoSchema])
+
+export const SelectCadastroSchema = union([
+  object({ id: IDSchema('o usuário') }),
+  object({ email: EmailSchema }),
+  object({ id: IDSchema('o usuário'), email: EmailSchema }),
+])

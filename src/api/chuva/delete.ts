@@ -14,6 +14,8 @@ export default new Hono().delete(
     const body = c.req.valid('json')
 
     const usaData = 'data' in body
+    const usaId = 'id' in body
+    
     const compare = usaData ? eq(schema.chuva.data, body.data) : eq(schema.chuva.id, body.id)
 
     const [chuva] = await db
@@ -21,7 +23,7 @@ export default new Hono().delete(
       .from(schema.chuva)
       .where(compare)
       .catch((c) => handleDBError(c, 'Erro ao selecionar chuva no banco de dados.'))
-
+    
     if (!chuva) {
       throw usaData
         ? createHTTPException(
@@ -35,6 +37,13 @@ export default new Hono().delete(
           `Id ${body.id} não identificado na tabela chuva do banco de dados.`,
         )
     }
+    
+    if (usaData && usaId && chuva.id !== body.id)
+      throw createHTTPException(
+        400,
+        `Chuva com data ${body.data} não corresponde ao id ${body.id}.`,
+        `Data ${body.data} e id ${body.id} em linhas diferentes da tabela chuva do banco de dados.`,
+      )
 
     const medicoes = await db
       .select()

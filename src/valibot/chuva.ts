@@ -2,7 +2,7 @@ import { array, check, object, pipe, union } from 'valibot'
 import { DataSchema, IDSchema, MedidaMmSchema } from './comum.ts'
 
 export const MedicaoSchema = object({
-  idPluvi: IDSchema('o Pluviômetro'),
+  idPluvi: IDSchema('o pluviômetro'),
   quantidadeMm: MedidaMmSchema('medição'),
 })
 
@@ -19,7 +19,7 @@ export const ChuvaSchema = pipe(
 )
 
 export const SelectChuvaSchema = union([
-  object({ id: IDSchema('a Chuva') }),
+  object({ id: IDSchema('a chuva') }),
   object({ data: DataSchema }),
-  object({ id: IDSchema('a Chuva'), data: DataSchema }),
+  object({ id: IDSchema('a chuva'), data: DataSchema }),
 ])
