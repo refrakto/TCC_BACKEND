@@ -74,11 +74,11 @@ export default new Hono().post(
         continue
       }
 
-      if (medicao.quantidadeMm > pluvi.capacidadeMm) {
+      if (medicao.quantidadeMm > (pluvi.capacidadeLitros / pluvi.areaCaptacaoM2)) {
         errors.push(
           await createHTTPException(
             400,
-            `Medição de índice ${i} tem medida maior que capacidade do pluviômetro.`,
+            `Medição de índice ${i} é maior que a capacidade do pluviômetro.`,
           )
             .getResponse()
             .json(),

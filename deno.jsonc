@@ -1,4 +1,9 @@
 {
+  "tasks": {
+    "start": "deno run --allow-env --allow-net --allow-read --allow-write --allow-ffi src/main.ts",
+    "test": "deno run -A src/run.tests.ts",
+    "drizzle": "deno i && deno run -A --allow-scripts --env-file=.env drizzle-kit"
+  },
   "imports": {
     //atalhos
     "@/": "./src/",
@@ -15,19 +20,20 @@
     //validacao de tipos
     "valibot": "jsr:@valibot/valibot@^1.1.0",
     //banco de dados
+    "drizzle-kit": "npm:drizzle-kit@^0.31.5",
     "drizzle-orm": "npm:drizzle-orm@^0.44.7",
     "pg": "npm:pg@^8.16.3",
     "@types/pg": "npm:@types/pg@^8.15.5",
     //dias
     "dayjs": "npm:dayjs@^1.11.18"
   },
-  "tasks": {
-    "start": "deno run --allow-env --allow-net --allow-read --allow-write --allow-ffi src/main.ts",
-    "drizzle": "npm i && npx drizzle-kit"
-  },
   "compilerOptions": {
+    "strict": true,
     "jsx": "precompile",
-    "jsxImportSource": "hono/jsx"
+    "jsxImportSource": "hono/jsx",
+    "types": [
+      "./src/types/hono.d.ts"
+    ]
   },
   "fmt": {
     "bracePosition": "sameLine",
@@ -48,14 +54,5 @@
     "exclude": ["**/*.test.ts"],
     "report": "pretty"
   },
-  "permissions": {
-    "default": {
-      "env": true,
-      "net": true,
-      "read": ["$HOME/.deno/plug/", ".env"],
-      "write": ["$HOME/.deno/plug/"],
-      "ffi": ["$HOME/.deno/plug/**/*.dll"]
-    }
-  },
-  "nodeModulesDir": "none"
+  "nodeModulesDir": "auto",
 }

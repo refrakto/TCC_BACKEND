@@ -18,14 +18,14 @@ import { DataLivreSchema, IDSchema } from './comum.ts'
 import dayjs from 'dayjs'
 
 export const NomeSchema = pipe(
-  string(),
+  string('Nome deve ser uma string.'),
   trim(),
   maxLength(100, 'O nome deve ter no máximo 100 caracteres.'),
   regex(/^[A-Za-zÀ-ÿ]+(?:[ '-][A-Za-zÀ-ÿ]+)*$/, 'Nome inválido.'),
 )
 
 export const EmailSchema = pipe(
-  string(),
+  string('Email deve ser uma string.'),
   trim(),
   email('Email Inválido.'),
   maxLength(100, 'O email deve ter no máximo 100 caracteres.'),
@@ -65,7 +65,6 @@ export const CadastroBaseSchema = object({
 export const CadastroSchema = intersect([CadastroBaseSchema, PermissaoSchema])
 
 export const SelectCadastroSchema = union([
-  object({ id: IDSchema('o usuário') }),
-  object({ email: EmailSchema }),
-  object({ id: IDSchema('o usuário'), email: EmailSchema }),
+  object({ id: optional(IDSchema('o usuário')), email: EmailSchema }),
+  object({ id: IDSchema('o usuário'), email: optional(EmailSchema) }),
 ])

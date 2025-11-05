@@ -8,8 +8,18 @@ import { HTTPException } from 'hono/http-exception'
 import { flatten, GenericSchema, GenericSchemaAsync } from 'valibot'
 import { createHTTPException, handleDBError, handleJWTError } from './errors.ts'
 
-export const acesso = (permissaoPermitida: 'estagiario' | 'admin') =>
-  vValidator('header', HeaderBearerSchema, async (result, c) => {
+export const acesso = (permissaoPermitida: 'estagiario' | 'admin') => async (c: any, next: any) => {
+  // Check for bypass token first (before validation)
+  const authHeader = c.req.header('Authorization')
+  if (authHeader) {
+    const token = authHeader.split(' ')[1]
+    if (token === new TextDecoder().decode(JWT_SECRET)) {
+      return next()
+    }
+  }
+
+  // Run validation
+  return vValidator('header', HeaderBearerSchema, async (result, c) => {
     if (!result.success) {
       throw createHTTPException(422, {
         message: 'Formatação de Header inválida.',
@@ -19,8 +29,6 @@ export const acesso = (permissaoPermitida: 'estagiario' | 'admin') =>
 
     const auth = result.output.authorization
     const token = auth.split(' ')[1]
-
-    if (new TextEncoder().encode(token) === JWT_SECRET) return //para testar apis antes de criar um usuario admin com permissao (por exemplo a propria api de criar contas)
 
     const db = c.get('db')
 
@@ -47,7 +55,8 @@ export const acesso = (permissaoPermitida: 'estagiario' | 'admin') =>
         'Método restrito a Administradores.',
       )
     }
-  })
+  })(c, next)
+}
 
 export const jsonValidator = <T extends GenericSchema | GenericSchemaAsync>(
   vSchema: T,

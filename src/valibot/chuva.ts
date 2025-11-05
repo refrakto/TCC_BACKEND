@@ -1,4 +1,4 @@
-import { array, check, object, pipe, union } from 'valibot'
+import { array, check, object, optional, pipe, union } from 'valibot'
 import { DataSchema, IDSchema, MedidaMmSchema } from './comum.ts'
 
 export const MedicaoSchema = object({
@@ -19,7 +19,6 @@ export const ChuvaSchema = pipe(
 )
 
 export const SelectChuvaSchema = union([
-  object({ id: IDSchema('a chuva') }),
-  object({ data: DataSchema }),
-  object({ id: IDSchema('a chuva'), data: DataSchema }),
+  object({ id: optional(IDSchema('a chuva')), data: DataSchema }),
+  object({ id: IDSchema('a chuva'), data: optional(DataSchema) }),
 ])

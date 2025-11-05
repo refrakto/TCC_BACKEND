@@ -13,10 +13,12 @@ export default new Hono().delete(
     const db = c.get('db')
     const body = c.req.valid('json')
 
-    const usaEmail = 'email' in body
-    const usaId = 'id' in body
+    const usaEmail = body.email ? true : false;
+    const usaId = body.id ? true : false;
 
-    const compare = usaEmail ? eq(schema.usuario.email, body.email) : eq(schema.usuario.id, body.id)
+    const compare = usaEmail
+      ? eq(schema.usuario.email, body.email!)
+      : eq(schema.usuario.id, body.id!)
 
     const [usuario] = await db
       .select()
@@ -38,12 +40,14 @@ export default new Hono().delete(
         )
     }
 
-    if (usaEmail && usaId && usuario.id !== body.id) {
-      throw createHTTPException(
-        400,
-        `Usuário com email ${body.email} não corresponde ao id ${body.id}.`,
-        `Email ${body.email} e id ${body.id} em linhas diferentes da tabela usuário do banco de dados.`,
-      )
+    if (usaEmail && usaId) {
+      if (usuario.id !== body.id) {
+        throw createHTTPException(
+          400,
+          `Usuário com email ${body.email} não corresponde ao id ${body.id}.`,
+          `Email ${body.email} e id ${body.id} em linhas diferentes da tabela usuário do banco de dados.`,
+        )
+      }
     }
 
     const [usuarioDeletado] = await db
@@ -51,19 +55,23 @@ export default new Hono().delete(
       .where(compare)
       .returning()
       .catch((c) => handleDBError(c, 'Erro ao deletar usuário no banco de dados.'))
-    
-    return c.json(usuarioDeletado.permissao === 'admin' ? {
-      id: usuarioDeletado.id,
-      email: usuarioDeletado.email,
-      nome: usuarioDeletado.nome,
-      permissao: 'admin',
-    } : {
-      id: usuarioDeletado.id,
-      email: usuarioDeletado.email,
-      nome: usuarioDeletado.nome,
-      permissao: 'estagiario',
-      dataInicio: usuarioDeletado.dataInicio ?? undefined,
-      dataFim: usuarioDeletado.dataFim ?? undefined,
-    })
+
+    return c.json(
+      usuarioDeletado.permissao === 'admin'
+        ? {
+          id: usuarioDeletado.id,
+          email: usuarioDeletado.email,
+          nome: usuarioDeletado.nome,
+          permissao: 'admin',
+        }
+        : {
+          id: usuarioDeletado.id,
+          email: usuarioDeletado.email,
+          nome: usuarioDeletado.nome,
+          permissao: 'estagiario',
+          dataInicio: usuarioDeletado.dataInicio ?? undefined,
+          dataFim: usuarioDeletado.dataFim ?? undefined,
+        },
+    )
   },
 )

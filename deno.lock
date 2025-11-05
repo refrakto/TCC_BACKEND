@@ -589,6 +589,7 @@
       "jsr:@valibot/valibot@^1.1.0",
       "npm:@types/pg@^8.15.5",
       "npm:dayjs@^1.11.18",
+      "npm:drizzle-kit@~0.31.5",
       "npm:drizzle-orm@~0.44.7",
       "npm:pg@^8.16.3"
     ],

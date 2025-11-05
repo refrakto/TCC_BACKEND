@@ -19,10 +19,10 @@ export default new Hono().patch(
     const db = c.get('db')
     const body = c.req.valid('json')
 
-    const usaData = 'data' in body
-    const usaId = 'id' in body
+    const usaData = body.data ? true : false;
+    const usaId = body.id ? true : false;
     
-    const compare = usaData ? eq(schema.chuva.data, body.data) : eq(schema.chuva.id, body.id)
+    const compare = usaData ? eq(schema.chuva.data, body.data!) : eq(schema.chuva.id, body.id!)
 
     const [chuvaExistente] = await db
       .select()
@@ -95,7 +95,7 @@ export default new Hono().patch(
     for (const [i, m] of body.medicoes.entries()) {
       const pluvi = pluvis.find((p) => p.id === m.idPluvi)!
 
-      if (m.quantidadeMm > pluvi.capacidadeMm) {
+      if (m.quantidadeMm > (pluvi.capacidadeLitros / pluvi.areaCaptacaoM2)) {
         errors.push(
           await createHTTPException(
             400,

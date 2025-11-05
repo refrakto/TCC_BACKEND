@@ -9,7 +9,7 @@ export const usuario = pgTable(
     id: serial().primaryKey().unique(),
     nome: varchar({ length: 100 }).notNull(),
     email: varchar({ length: 100 }).notNull().unique(),
-    senha: varchar({ length: 100 }).notNull(),
+    senha: varchar({ length: 300 }).notNull(),
     permissao: TipoUsuarioEnum().notNull(),
     dataInicio: date({ mode: 'string' }),
     dataFim: date({ mode: 'string' }),

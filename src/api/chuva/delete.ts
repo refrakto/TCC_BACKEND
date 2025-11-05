@@ -13,10 +13,10 @@ export default new Hono().delete(
     const db = c.get('db')
     const body = c.req.valid('json')
 
-    const usaData = 'data' in body
-    const usaId = 'id' in body
+    const usaData = body.data ? true : false
+    const usaId = body.id ? true : false
     
-    const compare = usaData ? eq(schema.chuva.data, body.data) : eq(schema.chuva.id, body.id)
+    const compare = usaData ? eq(schema.chuva.data, body.data!) : eq(schema.chuva.id, body.id!)
 
     const [chuva] = await db
       .select()

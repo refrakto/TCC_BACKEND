@@ -19,8 +19,8 @@ export function hasScale(value: number, scale: number) {
 }
 
 export const DataSchema = pipe(
-  string(),
-  isoDate('Formatação Inválida de Data.'),
+  string('A data deve ser uma string.'),
+  isoDate('A data deve ter formato "YYYY-MM-DD".'),
   check(
     (d) => dayjs(d).isSameOrBefore(dayjs(), 'day'),
     'Não é possível utilizar Data futura neste campo.',
@@ -28,8 +28,8 @@ export const DataSchema = pipe(
 )
 
 export const DataLivreSchema = pipe(
-  string(),
-  isoDate('Formatação Inválida de Data.'),
+  string('A data deve ser uma string.'),
+  isoDate('A data deve ter formato "YYYY-MM-DD".'),
 )
 
 export const IDSchema = (ONome: string) =>
