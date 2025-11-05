@@ -1,5 +1,5 @@
-import { boolean, check, finite, maxValue, minValue, number, object, optional, pipe, string } from 'valibot'
-import { DataSchema, hasScale, IDSchema } from './comum.ts'
+import { boolean, check, finite, maxValue, minValue, number, object, optional, pipe } from 'valibot'
+import { hasScale, IDSchema, MedidaMmSchema, NomeSchema } from './comum.ts'
 
 export const LatitudeSchema = pipe(
   number('Latitude deve ser um número.'),
@@ -21,14 +21,21 @@ export const AltitudeSchema = pipe(
   check((v) => hasScale(v, 2), 'Altitude deve ter no máximo 2 casas decimais.'),
 )
 
+export const AreaSchema = pipe(
+  number('Área deve ser um número.'),
+  minValue(0, 'A área não pode ser negativa.'),
+  finite(`A área não pode ser infinita.`),
+  check((v) => hasScale(v, 4), 'Área deve ter no máximo 4 casas decimais.'),
+)
+
 export const PluviometroSchema = object({
-  nome: string('Nome deve ser uma string.'),
-  capacidadeLitros: number('Capacidade deve ser um número.'),
+  nome: NomeSchema,
+  capacidadeLitros: MedidaMmSchema('capacidade'),
+  areaCaptacaoM2: AreaSchema,
   latitude: LatitudeSchema,
   longitude: LongitudeSchema,
   altitude: AltitudeSchema,
   arquivado: optional(boolean('O valor de arquivado deve ser booleano.'), false),
-  dataAquisicao: optional(DataSchema),
 })
 
 export const SelectPluviSchema = object({

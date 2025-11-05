@@ -6,17 +6,25 @@ import {
   integer,
   isoDate,
   looseObject,
+  maxLength,
   minValue,
   number,
   pipe,
   regex,
   string,
+  trim,
 } from 'valibot'
 
 export function hasScale(value: number, scale: number) {
   const decimals = value.toString().split('.')[1]?.length || 0
   return decimals <= scale
 }
+
+export const NomeSchema = pipe(
+  string('Nome deve ser uma string.'),
+  trim(),
+  maxLength(100, 'O nome deve ter no máximo 100 caracteres.'),
+)
 
 export const DataSchema = pipe(
   string('A data deve ser uma string.'),

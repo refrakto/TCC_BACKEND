@@ -14,15 +14,8 @@ import {
   trim,
   union,
 } from 'valibot'
-import { DataLivreSchema, IDSchema } from './comum.ts'
+import { DataLivreSchema, IDSchema, NomeSchema } from './comum.ts'
 import dayjs from 'dayjs'
-
-export const NomeSchema = pipe(
-  string('Nome deve ser uma string.'),
-  trim(),
-  maxLength(100, 'O nome deve ter no máximo 100 caracteres.'),
-  regex(/^[A-Za-zÀ-ÿ]+(?:[ '-][A-Za-zÀ-ÿ]+)*$/, 'Nome inválido.'),
-)
 
 export const EmailSchema = pipe(
   string('Email deve ser uma string.'),
@@ -57,7 +50,7 @@ export const PermissaoSchema = union(
 )
 
 export const CadastroBaseSchema = object({
-  nome: NomeSchema,
+  nome: pipe(NomeSchema, regex(/^[A-Za-zÀ-ÿ]+(?:[ '-][A-Za-zÀ-ÿ]+)*$/, 'Nome inválido.')),
   email: EmailSchema,
   senha: SenhaSchema,
 })
