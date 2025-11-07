@@ -11,7 +11,7 @@ export const medicao = pgTable(
     idChuva: integer()
       .notNull()
       .references(() => chuva.id, { onDelete: 'cascade' }),
-    quantidadeMm: decimal({ precision: 5, scale: 2, mode: 'number' }).notNull(),
+    quantidadeMm: decimal({ precision: 5, scale: 3, mode: 'number' }).notNull(),
   },
   (table) => [primaryKey({ columns: [table.idPluvi, table.idChuva] })],
 )

@@ -47,11 +47,12 @@ export const IDSchema = (ONome: string) =>
     minValue(1, `Não existe ID menor que 1.`),
   )
 
-export const MedidaMmSchema = (nome: string) =>
+export const MedidaMmSchema = (nome: string, escala: number) =>
   pipe(
     number(`A ${nome} deve ser um número.`),
     finite(`A ${nome} não pode ser infinita.`),
     minValue(0, `A ${nome} não pode ser um número negativo`),
+    check((v) => hasScale(v, escala), `A ${nome} deve ter no máximo ${escala} casas decimais.`)
   )
 
 export const HeaderBearerSchema = looseObject({

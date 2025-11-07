@@ -1,4 +1,16 @@
-import { boolean, check, finite, maxValue, minValue, number, object, optional, pipe } from 'valibot'
+import {
+  boolean,
+  check,
+  finite,
+  literal,
+  maxValue,
+  minValue,
+  number,
+  object,
+  optional,
+  pipe,
+  union,
+} from 'valibot'
 import { hasScale, IDSchema, MedidaMmSchema, NomeSchema } from './comum.ts'
 
 export const LatitudeSchema = pipe(
@@ -21,17 +33,16 @@ export const AltitudeSchema = pipe(
   check((v) => hasScale(v, 2), 'Altitude deve ter no máximo 2 casas decimais.'),
 )
 
-export const AreaSchema = pipe(
-  number('Área deve ser um número.'),
-  minValue(0, 'A área não pode ser negativa.'),
-  finite(`A área não pode ser infinita.`),
-  check((v) => hasScale(v, 4), 'Área deve ter no máximo 4 casas decimais.'),
-)
+export const TipoPluvi = union([
+  literal('manual'),
+  literal('automatico'),
+], 'Tipo de pluviômetro inválido.')
 
 export const PluviometroSchema = object({
   nome: NomeSchema,
-  capacidadeLitros: MedidaMmSchema('capacidade'),
-  areaCaptacaoM2: AreaSchema,
+  tipo: TipoPluvi,
+  capacidadeLitros: MedidaMmSchema('capacidade', 2),
+  areaCaptacaoM2: MedidaMmSchema('área', 4),
   latitude: LatitudeSchema,
   longitude: LongitudeSchema,
   altitude: AltitudeSchema,
@@ -39,5 +50,5 @@ export const PluviometroSchema = object({
 })
 
 export const SelectPluviSchema = object({
-  id: IDSchema('o pluviômetro')
+  id: IDSchema('o pluviômetro'),
 })
