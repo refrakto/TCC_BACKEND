@@ -28,7 +28,7 @@ export default new Hono().patch(
       .select()
       .from(schema.chuva)
       .where(compare)
-      .catch((c) => handleDBError(c, 'Erro ao selecionar chuva no banco de dados.'))
+      .catch((c) => handleDBError(c, 'Erro ao buscar chuva no banco de dados.'))
 
     if (!chuvaExistente) {
       throw usaData
@@ -56,7 +56,7 @@ export default new Hono().patch(
       .select()
       .from(schema.medicao)
       .where(eq(schema.medicao.idChuva, chuvaExistente.id))
-      .catch((c) => handleDBError(c, 'Erro ao selecionar medições no banco de dados.'))
+      .catch((c) => handleDBError(c, 'Erro ao buscar medições no banco de dados.'))
 
     const mExistentesIdPluvi = medicoes.map((m) => m.idPluvi)
 

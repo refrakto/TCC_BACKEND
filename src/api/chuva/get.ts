@@ -36,7 +36,7 @@ export default new Hono().get('/', jsonValidator(getRequestSchema), async (c) =>
       .select()
       .from(schema.chuva)
       .where(eq(schema.chuva.data, body.data))
-      .catch((c) => handleDBError(c, 'Erro ao selecionar chuva no banco de dados.'))
+      .catch((c) => handleDBError(c, 'Erro ao buscar chuva no banco de dados.'))
 
     if (!chuva) {
       throw createHTTPException(
@@ -63,7 +63,7 @@ export default new Hono().get('/', jsonValidator(getRequestSchema), async (c) =>
         lte(schema.chuva.data, body.dataUltima),
       ),
     )
-    .catch((c) => handleDBError(c, 'Erro ao selecionar chuvas no banco de dados.'))
+    .catch((c) => handleDBError(c, 'Erro ao buscar chuvas no banco de dados.'))
 
   if (!chuvas.length) {
     throw createHTTPException(
@@ -119,7 +119,7 @@ async function getChuva(
     .select()
     .from(schema.medicao)
     .where(eq(schema.medicao.idChuva, chuva.id))
-    .catch((c) => handleDBError(c, 'Erro ao selecionar Medições no banco de dados.'))
+    .catch((c) => handleDBError(c, 'Erro ao buscar medições no banco de dados.'))
 
   if (!medicoes.length) {
     throw createHTTPException(404, {

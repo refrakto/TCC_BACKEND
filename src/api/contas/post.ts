@@ -48,7 +48,7 @@ export default new Hono().post(
       .catch((c) =>
         handleDBError(
           c,
-          'Erro ao selecionar contas existentes no banco de dados.',
+          'Erro ao buscar contas existentes no banco de dados.',
         )
       )
 

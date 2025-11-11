@@ -24,7 +24,7 @@ export default new Hono().delete(
       .select()
       .from(schema.usuario)
       .where(compare)
-      .catch((c) => handleDBError(c, 'Erro ao selecionar usuário no banco de dados.'))
+      .catch((c) => handleDBError(c, 'Erro ao buscar usuário no banco de dados.'))
 
     if (!usuario) {
       throw usaEmail

@@ -20,7 +20,7 @@ export default new Hono().post(
       .catch((c) =>
         handleDBError(
           c,
-          'Erro ao selecionar chuva existente no banco de dados.',
+          'Erro ao buscar chuva existente no banco de dados.',
         )
       )
 
@@ -38,7 +38,7 @@ export default new Hono().post(
       .select()
       .from(schema.pluviometro)
       .where(inArray(schema.pluviometro.id, medicoesIdPluvi))
-      .catch((c) => handleDBError(c, 'Erro ao selecionar pluviometros no banco de dados.'))
+      .catch((c) => handleDBError(c, 'Erro ao buscar pluviômetros no banco de dados.'))
 
     const pluvisId = listaPluvis.map((p) => p.id)
 
