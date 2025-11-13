@@ -131,7 +131,8 @@ async function getChuva(
 
   let media: number = 0
   medicoes.forEach((m) => media += m.quantidadeMm)
-  media = Math.round((media + Number.EPSILON) * 100) / 100
+  media = Math.round(((media / medicoes.length) + Number.EPSILON) * 100) / 100
+  if (Number.isNaN(media)) media = 0
 
   return { id: chuva.id, data: chuva.data, media, medicoes }
 }

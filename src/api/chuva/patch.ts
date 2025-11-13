@@ -91,20 +91,64 @@ export default new Hono().patch(
       .catch((c) => handleDBError(c, 'Erro ao selecionar pluviometros no banco de dados.'))
 
     const errors: object[] = []
+    const dadosNovos: { quantidadeMm: number, quantidadeLitros: number}[] = []
 
-    for (const [i, m] of body.medicoes.entries()) {
-      const pluvi = pluvis.find((p) => p.id === m.idPluvi)!
+    for (const [i, medicao] of body.medicoes.entries()) {
+      const pluvi = pluvis.find((p) => p.id === medicao.idPluvi)!
 
-      if (m.quantidadeMm > (pluvi.capacidadeLitros / pluvi.areaCaptacaoM2)) {
-        errors.push(
-          await createHTTPException(
-            400,
-            `Medição de índice ${i} tem medida maior que capacidade do pluviômetro.`,
+      if (pluvi.tipo == 'automatico') {
+        if ('quantidadeLitros' in medicao) {
+          errors.push(
+            await createHTTPException(
+              400,
+              'Deve-se inserir apenas os milímetros calculados pelo pluviômetro automático.',
+            )
+              .getResponse()
+              .json(),
           )
-            .getResponse()
-            .json(),
-        )
+        } else if (medicao.quantidadeMm > (pluvi.capacidadeLitros / pluvi.areaCaptacaoM2)) {
+          errors.push(
+            await createHTTPException(
+              400,
+              `Medição de índice ${i} é maior que a capacidade do pluviômetro.`,
+            )
+              .getResponse()
+              .json(),
+          )
+        }
       }
+
+      if (pluvi.tipo == 'manual') {
+        if ('quantidadeMm' in medicao) {
+          errors.push(
+            await createHTTPException(
+              400,
+              'Deve-se inserir apenas os litros armazenados pelo pluviômetro manual.',
+            )
+              .getResponse()
+              .json(),
+          )
+        } else if (medicao.quantidadeLitros > pluvi.capacidadeLitros) {
+          errors.push(
+            await createHTTPException(
+              400,
+              `Medição de índice ${i} é maior que a capacidade do pluviômetro.`,
+            )
+              .getResponse()
+              .json(),
+          )
+        }
+      }
+
+      dadosNovos.push('quantidadeLitros' in medicao
+        ? {
+          quantidadeLitros: medicao.quantidadeLitros,
+          quantidadeMm: medicao.quantidadeLitros / pluvi.areaCaptacaoM2
+        } : {
+          quantidadeLitros: medicao.quantidadeMm * pluvi.areaCaptacaoM2,
+          quantidadeMm: medicao.quantidadeMm
+        }
+      )
     }
 
     if (errors.length) {
@@ -123,10 +167,10 @@ export default new Hono().patch(
     const medicoesAtualizadas = await db.transaction(async (tx) => {
       const updates = []
 
-      for (const m of body.medicoes) {
+      for (const [i, m] of body.medicoes.entries()) {
         const [medicaoAtualizada] = await tx
           .update(schema.medicao)
-          .set({ quantidadeMm: m.quantidadeMm })
+          .set(dadosNovos[i])
           .where(compareMedicao(m.idPluvi, chuvaExistente.id))
           .returning()
           .catch((c) => handleDBError(c, 'Erro ao atualizar medição no banco de dados.'))
@@ -139,7 +183,8 @@ export default new Hono().patch(
 
     let media: number = 0
     medicoesAtualizadas.forEach((m) => media += m.quantidadeMm)
-    media = Math.round((media + Number.EPSILON) * 100) / 100
+    media = Math.round(((media / medicoesAtualizadas.length) + Number.EPSILON) * 100) / 100
+    if (Number.isNaN(media)) media = 0
 
     return c.json(
       {
