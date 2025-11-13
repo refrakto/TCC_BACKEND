@@ -15,7 +15,7 @@ export default new Hono().delete(
 
     const usaData = body.data ? true : false
     const usaId = body.id ? true : false
-    
+
     const compare = usaData ? eq(schema.chuva.data, body.data!) : eq(schema.chuva.id, body.id!)
 
     const [chuva] = await db
@@ -23,7 +23,7 @@ export default new Hono().delete(
       .from(schema.chuva)
       .where(compare)
       .catch((c) => handleDBError(c, 'Erro ao buscar chuva no banco de dados.'))
-    
+
     if (!chuva) {
       throw usaData
         ? createHTTPException(
@@ -37,25 +37,40 @@ export default new Hono().delete(
           `Id ${body.id} não identificado na tabela chuva do banco de dados.`,
         )
     }
-    
-    if (usaData && usaId && chuva.id !== body.id)
+
+    if (usaData && usaId && chuva.id !== body.id) {
       throw createHTTPException(
         400,
         `Chuva com data ${body.data} não corresponde ao id ${body.id}.`,
         `Data ${body.data} e id ${body.id} em linhas diferentes da tabela chuva do banco de dados.`,
       )
+    }
 
     const medicoes = await db
       .select()
       .from(schema.medicao)
       .where(eq(schema.medicao.idChuva, chuva.id))
       .catch((c) => handleDBError(c, 'Erro ao buscar medições no banco de dados.'))
+    
+    if (!medicoes.length) {
+      throw createHTTPException(
+        404,
+        'Erro ao buscar medições no banco de dados.',
+        'Array medicoes vazio',
+      )
+    }
 
-    const [chuvaDeletada] = await db
-      .delete(schema.chuva)
-      .where(eq(schema.chuva.id, chuva.id))
-      .returning()
-      .catch((c) => handleDBError(c, 'Erro ao deletar chuva no banco de dados.'))
+    const chuvaDeletada = await db.transaction(async (tx) => {
+      const result = await tx
+        .delete(schema.chuva)
+        .where(eq(schema.chuva.id, chuva.id))
+        .returning()
+        .catch((c) => handleDBError(c, 'Erro ao deletar chuva no banco de dados.'))
+
+      if (!result.length) throw createHTTPException(500, 'Erro ao deletar chuva no banco de dados.')
+      
+      return result[0]
+    })
 
     let media: number = 0
     medicoes.forEach((m) => media += m.quantidadeMm)

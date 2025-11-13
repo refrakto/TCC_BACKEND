@@ -60,15 +60,15 @@ export default new Hono().patch(
 
     const mExistentesIdPluvi = medicoes.map((m) => m.idPluvi)
 
-    const mAtualizadasIdPluvi = body.medicoes.map((m) => m.idPluvi)
+    const bodyMedicoesIdPluvi = body.medicoes.map((m) => m.idPluvi)
 
     // Verifica se não removeram nenhum pluviômetro
     const pluviometrosRemovidos = mExistentesIdPluvi.filter(
-      (id) => !mAtualizadasIdPluvi.includes(id),
+      (id) => !bodyMedicoesIdPluvi.includes(id),
     )
 
     // Verifica se não adicionaram nenhum pluviômetro
-    const pluviometrosAdicionados = mAtualizadasIdPluvi.filter(
+    const pluviometrosAdicionados = bodyMedicoesIdPluvi.filter(
       (id) => !mExistentesIdPluvi.includes(id),
     )
 
@@ -87,7 +87,7 @@ export default new Hono().patch(
     const pluvis = await db
       .select()
       .from(schema.pluviometro)
-      .where(inArray(schema.pluviometro.id, mAtualizadasIdPluvi))
+      .where(inArray(schema.pluviometro.id, bodyMedicoesIdPluvi))
       .catch((c) => handleDBError(c, 'Erro ao selecionar pluviometros no banco de dados.'))
 
     const errors: object[] = []

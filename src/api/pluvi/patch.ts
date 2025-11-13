@@ -43,29 +43,44 @@ export default new Hono().patch(
             chuvasId.push(m.idChuva)
           }
         })
-        
+
         if (chuvasId.length) {
           const chuvasData = (await db
             .select({ data: schema.chuva.data })
             .from(schema.chuva)
             .where(inArray(schema.chuva.id, chuvasId))
-            .catch((c) => handleDBError(c, 'Erro ao buscar chuvas no banco de dados.'))).map((c) => `"${c.data}"`)
-          
-          throw createHTTPException(400, `Chuvas nas datas a seguir registram mais litros do que a capacidade nova: ${chuvasData.join(', ')}`)
+            .catch((c) => handleDBError(c, 'Erro ao buscar chuvas no banco de dados.'))).map((c) =>
+              `"${c.data}"`
+            )
+
+          throw createHTTPException(
+            400,
+            `Chuvas nas datas a seguir registram mais litros do que a capacidade nova: ${
+              chuvasData.join(', ')
+            }`,
+          )
         }
       }
     }
-    
-    const atualizado = await db
-      .update(schema.pluviometro)
-      .set(bodySemId)
-      .where(eq(schema.pluviometro.id, id))
-      .returning()
-      .catch((c) => handleDBError(c, 'Erro ao atualizar pluviômetro no banco de dados.'))
 
+    const atualizado = await db.transaction(async (tx) => {
+      const result = await tx
+        .update(schema.pluviometro)
+        .set(bodySemId)
+        .where(eq(schema.pluviometro.id, id))
+        .returning()
+        .catch((c) => handleDBError(c, 'Erro ao atualizar pluviômetro no banco de dados.'))
+      
+      if (!result.length) {
+        throw createHTTPException(500, 'Erro ao atualizar pluviômetro no banco de dados.')
+      }
+      
+      return result[0]
+    })
+    
     return c.json({
       message: 'Pluviômetro atualizado com sucesso',
-      pluvi: atualizado[0]
+      pluvi: atualizado,
     }, 200)
   },
 )

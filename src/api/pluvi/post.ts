@@ -23,11 +23,19 @@ export default new Hono().post(
       throw createHTTPException(400, `Pluviometro com nome ${existente[0].nome} já cadastrado.`)
     }
 
-    const [novo] = await db
-      .insert(schema.pluviometro)
-      .values(body)
-      .returning()
-      .catch((c) => handleDBError(c, 'Erro ao inserir pluviometro no banco de dados.'))
+    const novo = await db.transaction(async (tx) => {
+      const result = await tx
+        .insert(schema.pluviometro)
+        .values(body)
+        .returning()
+        .catch((c) => handleDBError(c, 'Erro ao inserir pluviometro no banco de dados.'))
+
+      if (!result.length) {
+        throw createHTTPException(500, 'Erro ao inserir pluviometro no banco de dados.')
+      }
+
+      return result[0]
+    })
 
     return c.json({
       message: 'Pluviômetro cadastrado com sucesso.',
