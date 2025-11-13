@@ -51,7 +51,7 @@ export default new Hono().delete(
       .from(schema.medicao)
       .where(eq(schema.medicao.idChuva, chuva.id))
       .catch((c) => handleDBError(c, 'Erro ao buscar medições no banco de dados.'))
-    
+
     if (!medicoes.length) {
       throw createHTTPException(
         404,
@@ -68,13 +68,14 @@ export default new Hono().delete(
         .catch((c) => handleDBError(c, 'Erro ao deletar chuva no banco de dados.'))
 
       if (!result.length) throw createHTTPException(500, 'Erro ao deletar chuva no banco de dados.')
-      
+
       return result[0]
     })
 
     let media: number = 0
     medicoes.forEach((m) => media += m.quantidadeMm)
-    media = Math.round((media + Number.EPSILON) * 100) / 100
+    media = Math.round(((media / medicoes.length) + Number.EPSILON) * 100) / 100
+    if (Number.isNaN(media)) media = 0
 
     const deletado = {
       ...chuvaDeletada,
