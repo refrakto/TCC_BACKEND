@@ -55,7 +55,7 @@ export default new Hono().delete(
     if (!medicoes.length) {
       throw createHTTPException(
         404,
-        'Erro ao buscar medições no banco de dados.',
+        'Medições associadas à chuva não encontradas.',
         'Array medicoes vazio',
       )
     }
@@ -65,9 +65,9 @@ export default new Hono().delete(
         .delete(schema.chuva)
         .where(eq(schema.chuva.id, chuva.id))
         .returning()
-        .catch((c) => handleDBError(c, 'Erro ao deletar chuva no banco de dados.'))
+        .catch((c) => handleDBError(c, 'Erro ao excluir chuva no banco de dados.'))
 
-      if (!result.length) throw createHTTPException(500, 'Erro ao deletar chuva no banco de dados.')
+      if (!result.length) throw createHTTPException(500, 'Erro ao excluir chuva no banco de dados.')
 
       return result[0]
     })

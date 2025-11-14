@@ -5,6 +5,7 @@ import {
   literal,
   maxValue,
   minValue,
+  nullish,
   number,
   object,
   optional,
@@ -43,9 +44,9 @@ export const PluviometroSchema = object({
   tipo: TipoPluvi,
   capacidadeLitros: MedidaMmSchema('capacidade', 2),
   areaCaptacaoM2: MedidaMmSchema('área', 4),
-  latitude: LatitudeSchema,
-  longitude: LongitudeSchema,
-  altitude: AltitudeSchema,
+  latitude: nullish(LatitudeSchema),
+  longitude: nullish(LongitudeSchema),
+  altitude: nullish(AltitudeSchema),
   arquivado: optional(boolean('O valor de arquivado deve ser booleano.'), false),
 })
 

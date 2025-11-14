@@ -69,14 +69,14 @@ export default new Hono().post(
       if (i.permissao === 'admin') {
         toInsert.push({
           nome: i.nome.trim(),
-          email: i.email,
+          email: i.email.trim().toLowerCase(),
           senha: senhaHash,
           permissao: 'admin',
         })
       } else {
         toInsert.push({
           nome: i.nome.trim(),
-          email: i.email,
+          email: i.email.trim().toLowerCase(),
           senha: senhaHash,
           permissao: 'estagiario',
           dataInicio: i.dataInicio,
@@ -85,11 +85,19 @@ export default new Hono().post(
       }
     }
 
-    const inserted = await db
-      .insert(schema.usuario)
-      .values(toInsert)
-      .returning()
-      .catch((c) => handleDBError(c, 'Erro ao inserir usuários no banco de dados.'))
+    const inserted = await db.transaction(async (tx) => {
+      const result = await tx
+        .insert(schema.usuario)
+        .values(toInsert)
+        .returning()
+        .catch((c) => handleDBError(c, 'Erro ao inserir usuários no banco de dados.'))
+
+      if (!result.length) {
+        throw createHTTPException(500, 'Erro ao inserir usuários no banco de dados.')
+      }
+
+      return result
+    })
 
     for (const r of inserted) {
       if (r.permissao === 'admin') {

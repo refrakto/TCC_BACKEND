@@ -5,6 +5,7 @@ import { createHTTPException, handleDBError } from '@/utils/errors.ts'
 import { acesso, jsonValidator } from '@/utils/permissao.ts'
 import { intersect, object } from 'valibot'
 import { ArrayMedicoesSchema, SelectChuvaSchema } from '@/valibot/chuva.ts'
+import { checkMedicoes } from './main.ts'
 
 export const PatchChuvaSchema = intersect([
   SelectChuvaSchema,
@@ -19,9 +20,9 @@ export default new Hono().patch(
     const db = c.get('db')
     const body = c.req.valid('json')
 
-    const usaData = body.data ? true : false;
-    const usaId = body.id ? true : false;
-    
+    const usaData = body.data ? true : false
+    const usaId = body.id ? true : false
+
     const compare = usaData ? eq(schema.chuva.data, body.data!) : eq(schema.chuva.id, body.id!)
 
     const [chuvaExistente] = await db
@@ -91,63 +92,36 @@ export default new Hono().patch(
       .catch((c) => handleDBError(c, 'Erro ao selecionar pluviometros no banco de dados.'))
 
     const errors: object[] = []
-    const dadosNovos: { quantidadeMm: number, quantidadeLitros: number}[] = []
+    const dadosNovos: { quantidadeMm: number; quantidadeLitros: number }[] = []
 
     for (const [i, medicao] of body.medicoes.entries()) {
       const pluvi = pluvis.find((p) => p.id === medicao.idPluvi)!
 
-      if (pluvi.tipo == 'automatico') {
-        if ('quantidadeLitros' in medicao) {
-          errors.push(
-            await createHTTPException(
-              400,
-              'Deve-se inserir apenas os milímetros calculados pelo pluviômetro automático.',
-            )
-              .getResponse()
-              .json(),
+      if (pluvi.arquivado) {
+        errors.push(
+          await createHTTPException(
+            400,
+            `Medição de índice ${i} seleciona pluviômetro arquivado.`,
           )
-        } else if (medicao.quantidadeMm > (pluvi.capacidadeLitros / pluvi.areaCaptacaoM2)) {
-          errors.push(
-            await createHTTPException(
-              400,
-              `Medição de índice ${i} é maior que a capacidade do pluviômetro.`,
-            )
-              .getResponse()
-              .json(),
-          )
-        }
+            .getResponse()
+            .json(),
+        )
+        continue
       }
 
-      if (pluvi.tipo == 'manual') {
-        if ('quantidadeMm' in medicao) {
-          errors.push(
-            await createHTTPException(
-              400,
-              'Deve-se inserir apenas os litros armazenados pelo pluviômetro manual.',
-            )
-              .getResponse()
-              .json(),
-          )
-        } else if (medicao.quantidadeLitros > pluvi.capacidadeLitros) {
-          errors.push(
-            await createHTTPException(
-              400,
-              `Medição de índice ${i} é maior que a capacidade do pluviômetro.`,
-            )
-              .getResponse()
-              .json(),
-          )
-        }
-      }
+      const erro = await checkMedicoes(i, pluvi, medicao)
+      if (erro) errors.push(erro)
 
-      dadosNovos.push('quantidadeLitros' in medicao
-        ? {
-          quantidadeLitros: medicao.quantidadeLitros,
-          quantidadeMm: medicao.quantidadeLitros / pluvi.areaCaptacaoM2
-        } : {
-          quantidadeLitros: medicao.quantidadeMm * pluvi.areaCaptacaoM2,
-          quantidadeMm: medicao.quantidadeMm
-        }
+      dadosNovos.push(
+        'quantidadeLitros' in medicao
+          ? {
+            quantidadeLitros: medicao.quantidadeLitros,
+            quantidadeMm: medicao.quantidadeLitros / pluvi.areaCaptacaoM2,
+          }
+          : {
+            quantidadeLitros: medicao.quantidadeMm * pluvi.areaCaptacaoM2,
+            quantidadeMm: medicao.quantidadeMm,
+          },
       )
     }
 
@@ -174,6 +148,10 @@ export default new Hono().patch(
           .where(compareMedicao(m.idPluvi, chuvaExistente.id))
           .returning()
           .catch((c) => handleDBError(c, 'Erro ao atualizar medição no banco de dados.'))
+
+        if (!medicaoAtualizada) {
+          throw createHTTPException(500, 'Erro ao atualizar medição no banco de dados.')
+        }
 
         updates.push(medicaoAtualizada)
       }

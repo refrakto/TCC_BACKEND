@@ -13,8 +13,10 @@ export const ManualSchema = object({
   quantidadeLitros: MedidaMmSchema('medição em litros', 2),
 })
 
+export const MedicaoSchema = union([AutoSchema, ManualSchema])
+
 export const ArrayMedicoesSchema = pipe(
-  array(union([AutoSchema, ManualSchema])),
+  array(MedicaoSchema),
   check((v) => {
     const ids = v.map((m) => m.idPluvi)
     return ids.length === new Set(ids).size
