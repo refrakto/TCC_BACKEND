@@ -4,6 +4,7 @@ import { ChuvaSchema } from '@/valibot/chuva.ts'
 import * as schema from '@/database/main.ts'
 import { eq, inArray } from 'drizzle-orm'
 import { createHTTPException, handleDBError } from '@/utils/errors.ts'
+import { checkMedicoes } from './main.ts'
 
 export default new Hono().post(
   '/',
@@ -74,49 +75,8 @@ export default new Hono().post(
         continue
       }
 
-      if (pluvi.tipo == 'automatico') {
-        if ('quantidadeLitros' in medicao) {
-          errors.push(
-            await createHTTPException(
-              400,
-              'Deve-se inserir apenas os milímetros calculados pelo pluviômetro automático.',
-            )
-              .getResponse()
-              .json(),
-          )
-        } else if (medicao.quantidadeMm > (pluvi.capacidadeLitros / pluvi.areaCaptacaoM2)) {
-          errors.push(
-            await createHTTPException(
-              400,
-              `Medição de índice ${i} é maior que a capacidade do pluviômetro.`,
-            )
-              .getResponse()
-              .json(),
-          )
-        }
-      }
-
-      if (pluvi.tipo == 'manual') {
-        if ('quantidadeMm' in medicao) {
-          errors.push(
-            await createHTTPException(
-              400,
-              'Deve-se inserir apenas os litros armazenados pelo pluviômetro manual.',
-            )
-              .getResponse()
-              .json(),
-          )
-        } else if (medicao.quantidadeLitros > pluvi.capacidadeLitros) {
-          errors.push(
-            await createHTTPException(
-              400,
-              `Medição de índice ${i} é maior que a capacidade do pluviômetro.`,
-            )
-              .getResponse()
-              .json(),
-          )
-        }
-      }
+      const erro = await checkMedicoes(i, pluvi, medicao)
+      if (erro) errors.push(erro)
     }
 
     if (errors.length) {
@@ -132,6 +92,8 @@ export default new Hono().post(
         .values({ data: body.data })
         .returning()
         .catch((c) => handleDBError(c, 'Erro ao inserir chuva no banco de dados.'))
+
+      if (!chuva) throw createHTTPException(500, 'Erro ao inserir chuva no banco de dados.')
 
       const insert = body.medicoes.map((m) => {
         const pluvi = listaPluvis.find((p) => p.id === m.idPluvi)!

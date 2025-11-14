@@ -36,13 +36,15 @@ export const acesso = (permissaoPermitida: 'estagiario' | 'admin') => async (c: 
       throw handleJWTError(e)
     })
     const permissao = payload.permissao as string
-    ;(
-      await db
-        .select()
-        .from(schema.usuario)
-        .where(eq(schema.usuario.id, payload.id as number))
-        .catch((c) => handleDBError(c, 'Erro ao selecionar usuário autenticado no banco de dados.'))
-    )[0]
+    const [usuario] = await db
+      .select()
+      .from(schema.usuario)
+      .where(eq(schema.usuario.id, payload.id as number))
+      .catch((c) => handleDBError(c, 'Erro ao selecionar usuário autenticado no banco de dados.'))
+
+    if (!usuario) {
+      throw createHTTPException(403, 'Permissão negada.')
+    }
 
     c.set('acesso', payload)
 
@@ -51,7 +53,7 @@ export const acesso = (permissaoPermitida: 'estagiario' | 'admin') => async (c: 
     if (permissao !== permissaoPermitida) {
       throw createHTTPException(
         403,
-        { message: 'Permissão negada.' },
+        'Permissão negada.',
         'Método restrito a Administradores.',
       )
     }

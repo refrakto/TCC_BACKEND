@@ -8,6 +8,7 @@ import { object } from 'valibot'
 import { JWT_SECRET } from '@/main.ts'
 import { jsonValidator } from '@/utils/permissao.ts'
 import { createHTTPException, handleDBError } from '@/utils/errors.ts'
+import { DUMMY_HASH } from '@/main.exports.ts'
 
 export const LoginRequestSchema = object({
   email: EmailSchema,
@@ -28,11 +29,16 @@ export default new Hono().post(
       .catch((c) => handleDBError(c, 'Erro ao selecionar usuário no banco de dados.'))
 
     if (!usuario) {
-      throw createHTTPException(404, 'Usuário não encontrado.', 'usuario == undefined')
+      await verify(DUMMY_HASH, body.senha) // Simula verificação
+      throw createHTTPException(401, 'Credenciais inválidas.', 'Usuário não encontrado.')
     }
 
     if (!(await verify(usuario.senha, body.senha))) {
-      throw createHTTPException(401, 'Senha inválida.', 'Verificação de senha retornou falso.')
+      throw createHTTPException(
+        401,
+        'Credenciais inválidas.',
+        'Verificação de senha retornou falso.',
+      )
     }
 
     const token = await new SignJWT({

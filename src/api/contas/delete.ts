@@ -12,9 +12,10 @@ export default new Hono().delete(
   async (c) => {
     const db = c.get('db')
     const body = c.req.valid('json')
+    const acesso = c.get('acesso')
 
-    const usaEmail = body.email ? true : false;
-    const usaId = body.id ? true : false;
+    const usaEmail = body.email ? true : false
+    const usaId = body.id ? true : false
 
     const compare = usaEmail
       ? eq(schema.usuario.email, body.email!)
@@ -40,6 +41,13 @@ export default new Hono().delete(
         )
     }
 
+    if (acesso.id === usuario.id) {
+      throw createHTTPException(
+        400,
+        'Não é possível deletar a própria conta.',
+      )
+    }
+
     if (usaEmail && usaId) {
       if (usuario.id !== body.id) {
         throw createHTTPException(
@@ -50,11 +58,19 @@ export default new Hono().delete(
       }
     }
 
-    const [usuarioDeletado] = await db
-      .delete(schema.usuario)
-      .where(compare)
-      .returning()
-      .catch((c) => handleDBError(c, 'Erro ao deletar usuário no banco de dados.'))
+    const usuarioDeletado = await db.transaction(async (tx) => {
+      const result = await tx
+        .delete(schema.usuario)
+        .where(compare)
+        .returning()
+        .catch((c) => handleDBError(c, 'Erro ao excluir usuário no banco de dados.'))
+
+      if (!result.length) {
+        throw createHTTPException(500, 'Erro ao excluir usuário no banco de dados.')
+      }
+
+      return result[0]
+    })
 
     return c.json(
       usuarioDeletado.permissao === 'admin'

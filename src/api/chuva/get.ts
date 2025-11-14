@@ -76,6 +76,21 @@ export default new Hono().get('/', jsonValidator(getRequestSchema), async (c) =>
   const sucessos: Awaited<ReturnType<typeof getChuva>>[] = []
   const errors: object[] = []
 
+  const resultados = await Promise.allSettled(
+    chuvas.map((chuva) => getChuva(chuva, db)),
+  )
+
+  for (const resultado of resultados) {
+    if (resultado.status === 'fulfilled') {
+      sucessos.push(resultado.value)
+    } else {
+      const erro = resultado.reason as HTTPException
+      if (erro.status === 500) throw erro
+      errors.push(await erro.getResponse().json())
+    }
+  }
+
+  /*
   for (const chuva of chuvas) {
     const tentativa = await getChuva(chuva, db).catch(
       async (e: HTTPException) => {
@@ -88,6 +103,7 @@ export default new Hono().get('/', jsonValidator(getRequestSchema), async (c) =>
 
     sucessos.push(tentativa)
   }
+  */
 
   if (!sucessos.length) {
     throw createHTTPException(

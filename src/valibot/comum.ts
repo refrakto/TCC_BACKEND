@@ -3,6 +3,7 @@ import _isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
 import {
   check,
   finite,
+  gtValue,
   integer,
   isoDate,
   looseObject,
@@ -51,7 +52,7 @@ export const MedidaMmSchema = (nome: string, escala: number) =>
   pipe(
     number(`A ${nome} deve ser um número.`),
     finite(`A ${nome} não pode ser infinita.`),
-    minValue(0, `A ${nome} não pode ser um número negativo`),
+    gtValue(0, `A ${nome} deve ser maior que zero.`),
     check((v) => hasScale(v, escala), `A ${nome} deve ter no máximo ${escala} casas decimais.`)
   )
 

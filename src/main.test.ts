@@ -79,9 +79,9 @@ Deno.test({
       }),
     })
 
-    assertEquals(response.status, 404)
+    assertEquals(response.status, 401)
     const data = await response.json()
-    assertEquals(data.message, 'Usuário não encontrado.')
+    assertEquals(data.message, 'Credenciais inválidas.')
   },
 })
 
@@ -243,7 +243,7 @@ Deno.test('Auth - POST /auth/login - should fail with wrong password', async () 
 
   assertEquals(response.status, 401)
   const data = await response.json()
-  assertEquals(data.message, 'Senha inválida.')
+  assertEquals(data.message, 'Credenciais inválidas.')
 })
 
 Deno.test('Auth - GET /auth/check - should validate admin token', async () => {
@@ -650,12 +650,30 @@ Deno.test('Contas - DELETE /contas - should fail with mismatched id and email', 
   await cleanupResponse.text().catch(() => {})
 })
 
-Deno.test('Contas - DELETE /contas - cleanup: delete admin account', async () => {
+Deno.test('Contas - DELETE /contas - should fail: delete admin account with the same admin\'s token', async () => {
   const response = await fetch(`${BASE_URL}/contas`, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${adminToken}`,
+    },
+    body: JSON.stringify({ id: adminId }),
+  })
+
+  const data = await response.json()
+  assertEquals(
+    response.status,
+    400,
+  )
+  assertEquals(data.message, 'Não é possível deletar a própria conta.')
+})
+
+Deno.test('Contas - DELETE /contas - cleanup: delete admin account', async () => {
+  const response = await fetch(`${BASE_URL}/contas`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${new TextDecoder().decode(JWT_SECRET)}`,
     },
     body: JSON.stringify({ id: adminId }),
   })

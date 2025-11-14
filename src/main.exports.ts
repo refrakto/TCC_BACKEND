@@ -2,6 +2,7 @@ import '@std/dotenv/load'
 import * as schema from '@/database/main.ts'
 import { drizzle } from 'drizzle-orm/node-postgres'
 import { Pool } from 'pg'
+import { hash } from '@felix/argon2'
 
 export const JWT_SECRET = new TextEncoder().encode(Deno.env.get('JWT_SECRET'))
 
@@ -23,6 +24,8 @@ export function checkDbConnection() {
     throw new Error('Erro ao conectar ao banco de dados', { cause: e })
   }
 }
+
+export const DUMMY_HASH = await hash('dummy_password_12ß3¶4)56(*78/')
 
 export function eventListeners() {
   addEventListener('unload', () => {
