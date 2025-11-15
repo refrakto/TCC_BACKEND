@@ -9,8 +9,8 @@ import { acesso } from '@/utils/permissao.ts'
 import { createHTTPException, handleDBError } from '@/utils/errors.ts'
 
 export const CadastroArraySchema = pipe(
-  array(CadastroSchema, 'Array de cadastros inválido'),
-  minLength(1, 'Array de cadastros vazio'),
+  array(CadastroSchema, 'Array de cadastros inválido.'),
+  minLength(1, 'Array de cadastros vazio.'),
 )
 
 export type CadastroRequest = InferInput<typeof CadastroArraySchema>
@@ -61,7 +61,6 @@ export default new Hono().post(
     }
 
     const toInsert: CadastroRequest = []
-    const responseUsuarios = []
 
     for (const i of body) {
       const senhaHash = await hash(i.senha)
@@ -98,6 +97,9 @@ export default new Hono().post(
 
       return result
     })
+    
+    
+    const responseUsuarios = []
 
     for (const r of inserted) {
       if (r.permissao === 'admin') {

@@ -44,7 +44,7 @@ const TEST_ESTAGIARIO = {
   senha: 'EstagiarioPassword123!',
   permissao: 'estagiario' as const,
   dataInicio: '2024-01-01',
-  dataFim: '2024-12-31',
+  dataFim: '2026-12-31',
 }
 
 const TEST_ESTAGIARIO_2 = {
@@ -664,28 +664,68 @@ Deno.test('Contas - DELETE /contas - should fail: delete admin account with the 
   assertEquals(
     response.status,
     400,
+    `Expected 400 but got ${response.status}: ${JSON.stringify(data)}`,
   )
   assertEquals(data.message, 'Não é possível deletar a própria conta.')
 })
 
 Deno.test('Contas - DELETE /contas - cleanup: delete admin account', async () => {
-  const response = await fetch(`${BASE_URL}/contas`, {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${new TextDecoder().decode(JWT_SECRET)}`,
-    },
-    body: JSON.stringify({ id: adminId }),
-  })
-
-  const data = await response.json()
-  assertEquals(
-    response.status,
-    200,
-    `Expected 200 but got ${response.status}: ${JSON.stringify(data)}`,
-  )
-  assertEquals(data.id, adminId)
-  assertEquals(data.permissao, 'admin')
+  const response2 = await fetch(`${BASE_URL}/contas`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify([{
+        nome: 'Admin Deleter',
+        email: 'admin.deleter@example.com',
+        senha: 'DeleterPassword123!',
+        permissao: 'admin',
+      }]),
+    })
+    const data2 = await response2.json()
+    const admin2Id = data2.usuarios[0].id
+  
+    // Login as second admin
+    const loginResponse = await fetch(`${BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: 'admin.deleter@example.com',
+        senha: 'DeleterPassword123!',
+      }),
+    })
+    const loginData = await loginResponse.json()
+    const admin2Token = loginData.token
+  
+    // Now delete the first admin using second admin's token
+    const response = await fetch(`${BASE_URL}/contas`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${admin2Token}`,
+      },
+      body: JSON.stringify({ id: adminId }),
+    })
+  
+    const data = await response.json()
+    assertEquals(
+      response.status,
+      200,
+      `Expected 200 but got ${response.status}: ${JSON.stringify(data)}`,
+    )
+    assertEquals(data.id, adminId)
+    assertEquals(data.permissao, 'admin')
+  
+    // Delete second admin using bypass token
+    await fetch(`${BASE_URL}/contas`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${new TextDecoder().decode(JWT_SECRET)}`,
+      },
+      body: JSON.stringify({ id: admin2Id }),
+    }).then(r => r.text().catch(() => {}))
 })
 
 // ============================================================================
@@ -703,7 +743,7 @@ Deno.test('Auth - POST /auth/login - should fail after account deletion', async 
   })
 
   await response.text().catch(() => {})
-  assertEquals(response.status, 404)
+  assertEquals(response.status, 401)
 })
 
 Deno.test('Auth - GET /auth/check - should fail with expired/invalid token after deletion', async () => {

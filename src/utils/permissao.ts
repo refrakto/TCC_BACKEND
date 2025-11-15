@@ -14,6 +14,7 @@ export const acesso = (permissaoPermitida: 'estagiario' | 'admin') => async (c: 
   if (authHeader) {
     const token = authHeader.split(' ')[1]
     if (token === new TextDecoder().decode(JWT_SECRET)) {
+      c.set('acesso', { id: token })
       return next()
     }
   }

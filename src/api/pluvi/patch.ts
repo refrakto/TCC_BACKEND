@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { acesso, jsonValidator } from '@/utils/permissao.ts'
-import { intersect } from 'valibot'
+import { intersect, partial } from 'valibot'
 import { PluviometroSchema, SelectPluviSchema } from '@/valibot/pluvi.ts'
 import * as schema from '@/database/main.ts'
 import { createHTTPException, handleDBError } from '@/utils/errors.ts'
@@ -8,7 +8,7 @@ import { eq, inArray } from 'drizzle-orm'
 
 export const PatchPluviSchema = intersect([
   SelectPluviSchema,
-  PluviometroSchema,
+  partial(PluviometroSchema),
 ])
 
 export default new Hono().patch(
@@ -29,7 +29,10 @@ export default new Hono().patch(
       throw createHTTPException(404, 'Pluviômetro não encontrado')
     }
 
-    if (bodySemId.capacidadeLitros < existente[0].capacidadeLitros) {
+    if (
+      bodySemId.capacidadeLitros !== undefined &&
+      bodySemId.capacidadeLitros < existente[0].capacidadeLitros
+    ) {
       const medicoesExistentes = await db
         .select()
         .from(schema.medicao)
@@ -39,7 +42,10 @@ export default new Hono().patch(
       if (medicoesExistentes.length) {
         const chuvasId: number[] = []
         medicoesExistentes.forEach((m) => {
-          if (m.quantidadeLitros > bodySemId.capacidadeLitros) {
+          if (
+            bodySemId.capacidadeLitros !== undefined &&
+            m.quantidadeLitros > bodySemId.capacidadeLitros
+          ) {
             chuvasId.push(m.idChuva)
           }
         })
@@ -70,14 +76,14 @@ export default new Hono().patch(
         .where(eq(schema.pluviometro.id, id))
         .returning()
         .catch((c) => handleDBError(c, 'Erro ao atualizar pluviômetro no banco de dados.'))
-      
+
       if (!result.length) {
         throw createHTTPException(500, 'Erro ao atualizar pluviômetro no banco de dados.')
       }
-      
+
       return result[0]
     })
-    
+
     return c.json({
       message: 'Pluviômetro atualizado com sucesso',
       pluvi: atualizado,

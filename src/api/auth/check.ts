@@ -54,8 +54,6 @@ export default new Hono().get('/check', vValidator('header', HeaderBearerSchema)
     )
   }
 
-  console.log(usuario.dataFim)
-
   if (usuario.permissao === 'estagiario' && usuario.dataFim) {
     if (dayjs().isAfter(dayjs(usuario.dataFim))) {
       throw createHTTPException(

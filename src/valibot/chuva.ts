@@ -1,4 +1,4 @@
-import { array, check, literal, object, optional, pipe, union } from 'valibot'
+import { array, check, literal, minLength, object, optional, pipe, union } from 'valibot'
 import { DataSchema, IDSchema, MedidaMmSchema } from './comum.ts'
 
 export const AutoSchema = object({
@@ -17,6 +17,7 @@ export const MedicaoSchema = union([AutoSchema, ManualSchema])
 
 export const ArrayMedicoesSchema = pipe(
   array(MedicaoSchema),
+  minLength(1, 'Array de medições vazio.'),
   check((v) => {
     const ids = v.map((m) => m.idPluvi)
     return ids.length === new Set(ids).size
