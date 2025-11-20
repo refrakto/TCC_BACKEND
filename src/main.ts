@@ -36,9 +36,14 @@ app
 
 if (import.meta.main) {
   main.eventListeners()
-  Deno.serve(app.fetch)
+  console.clear()
+  Deno.serve({
+    port: main.PORT,
+    hostname: main.HOST,
+    onListen: (address) =>
+      console.log(`🚀 SIMP-IFRJ BACKEND iniciado com sucesso! \nServindo em: http://${main.simplificarLocalhost(address.hostname)}:${address.port}/`),
+  }, app.fetch)
 }
-
 
 //PÓS-EXECUÇÃO
 await new Promise((r) => setTimeout(r, 1000))
@@ -47,4 +52,3 @@ main.args(Deno.args, main.DRIZZLE_STARTER)
 
 export * from './main.exports.ts'
 export type AppType = typeof app
-export default app

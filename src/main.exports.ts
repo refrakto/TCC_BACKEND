@@ -9,6 +9,9 @@ import { EmailSchema, SenhaSchema } from './valibot/cadastro.ts'
 import { eq } from 'drizzle-orm'
 import { NomeSchema } from './valibot/comum.ts'
 
+export const PORT = Number.parseInt(Deno.env.get('PORT') ?? '3000')
+export const HOST = Deno.env.get('HOST') ?? 'localhost'
+
 export const JWT_SECRET = new TextEncoder().encode(Deno.env.get('JWT_SECRET'))
 
 export const DB_HOST = Deno.env.get('DB_HOST') ?? 'localhost'
@@ -21,6 +24,10 @@ export const DB_URL = `postgresql://${DB_USUARIO}:${DB_SENHA}@${DB_HOST}:${DB_PO
 export const DUMMY_HASH = await hash('dummy_password_12ß3¶4)56(*78/')
 
 export const DRIZZLE_STARTER = drizzle<typeof schema>(DB_URL)
+
+export function simplificarLocalhost(host: string) {
+  return host === '127.0.0.1' || host === '::1' ? 'localhost' : host
+}
 
 export function checkDbConnection() {
   try {
@@ -51,24 +58,24 @@ export function eventListeners() {
 export async function args(args: string[], db: typeof DRIZZLE_STARTER) {
   const init = args.includes('--init')
   const test = args.includes('--test')
-  
-  const envPath = path.join(Deno.cwd(), '.env');
+
+  const envPath = path.join(Deno.cwd(), '.env')
   const initEnv = Deno.env.get('INIT')
-  
+
   if (initEnv !== undefined) {
     let res
-    while( !(res === 's' || res === 'n' || res === 'sim' || res === 'nao') ) {
+    while (!(res === 's' || res === 'n' || res === 'sim' || res === 'nao')) {
       console.clear()
       console.log('Primeiro admin já foi criado.')
       res = prompt('Deseja criar outro admin? (sim/nao): ')
     }
     if (res === 's' || res === 'sim') {
       await db.delete(schema.usuario).where(eq(schema.usuario.id, Number.parseInt(initEnv)))
-      const textoExistente = await Deno.readTextFile(envPath);
-      const linhas = textoExistente.split("\n");
-      const linhasFiltradas = linhas.filter(l => !l.includes('INIT'));
-      const textoNovo = linhasFiltradas.join("\n");
-      await Deno.writeTextFile(envPath, textoNovo);
+      const textoExistente = await Deno.readTextFile(envPath)
+      const linhas = textoExistente.split('\n')
+      const linhasFiltradas = linhas.filter((l) => !l.includes('INIT'))
+      const textoNovo = linhasFiltradas.join('\n')
+      await Deno.writeTextFile(envPath, textoNovo)
     } else return
   }
 
@@ -117,9 +124,10 @@ export async function args(args: string[], db: typeof DRIZZLE_STARTER) {
       permissao: 'admin',
     }).returning()
 
-    const textoExistente = await Deno.readTextFile(envPath);
-    const textoNovo = textoExistente.trimEnd() + "\n\n" + `INIT=${id}`;
-    await Deno.writeTextFile(envPath, textoNovo);
+    const textoExistente = await Deno.readTextFile(envPath)
+    const textoNovo = textoExistente.trimEnd() + '\n\n' + `INIT=${id}`
+    await Deno.writeTextFile(envPath, textoNovo)
+    console.clear()
     console.log('Conta de administrador criada com sucesso.')
   }
 
@@ -189,7 +197,7 @@ export async function ensureEnvFile() {
 }
 
 export const HELP_TEMPLATE = `
-TCC-PLUVI BACKEND
+SIMP-IFRJ BACKEND
 
 Certifique de que o banco de dados esteja configurado corretamente.
 
@@ -200,9 +208,13 @@ Opções:
 `
 
 const DOTENV_TEMPLATE = (JWT_SECRET: string) =>
-  `# TCC-PLUVI --- Variáveis de Ambiente
+  `# SIMP-IFRJ BACKEND --- Variáveis de Ambiente
 
-# Configuração do banco de dados
+# Configurações do servidor
+PORT=3000
+HOST=localhost
+
+# Configurações do banco de dados
 DB_HOST=localhost
 DB_PORT=5432
 DB_USUARIO=exemplousuario
