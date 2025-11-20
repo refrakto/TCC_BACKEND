@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { jwtVerify } from 'jose'
 import { eq } from 'drizzle-orm'
-import * as schema from '@/database/main.ts'
+import * as schema from 'schema'
 import { JWT_SECRET } from '@/main.ts'
 import { createHTTPException, handleDBError, handleJWTError } from '@/utils/errors.ts'
 import { vValidator } from '@hono/valibot-validator'
@@ -70,15 +70,15 @@ export default new Hono().get('/check', vValidator('header', HeaderBearerSchema)
         id: usuario.id,
         nome: usuario.nome,
         email: usuario.email,
-        permissao: usuario.permissao,
+        permissao: 'admin',
       }
       : {
         id: usuario.id,
         nome: usuario.nome,
         email: usuario.email,
-        permissao: usuario.permissao,
+        permissao: 'estagiario',
         dataInicio: usuario.dataInicio,
-        dataFim: usuario.dataFim ?? undefined,
+        dataFim: usuario.dataFim,
       },
   }, 200)
 })

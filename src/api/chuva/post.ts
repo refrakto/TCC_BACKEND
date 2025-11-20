@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { acesso, jsonValidator } from '@/utils/permissao.ts'
 import { ChuvaSchema } from '@/valibot/chuva.ts'
-import * as schema from '@/database/main.ts'
+import * as schema from 'schema'
 import { eq, inArray } from 'drizzle-orm'
 import { createHTTPException, handleDBError } from '@/utils/errors.ts'
 import { checkMedicoes } from './main.ts'
@@ -135,7 +135,7 @@ export default new Hono().post(
     })
 
     return c.json({
-      message: 'Chuva e medições inseridas com sucesso.',
+      message: 'Chuva e medições cadastradas com sucesso.',
       chuva: retorno,
     }, 201)
   },

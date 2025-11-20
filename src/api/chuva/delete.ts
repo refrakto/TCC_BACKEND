@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm'
 import { Hono } from 'hono'
-import * as schema from '@/database/main.ts'
+import * as schema from 'schema'
 import { acesso, jsonValidator } from '@/utils/permissao.ts'
 import { createHTTPException, handleDBError } from '@/utils/errors.ts'
 import { SelectChuvaSchema } from '@/valibot/chuva.ts'

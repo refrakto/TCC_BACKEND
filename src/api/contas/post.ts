@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { vValidator } from '@hono/valibot-validator'
 import { CadastroSchema } from '@/valibot/cadastro.ts'
-import * as schema from '@/database/main.ts'
+import * as schema from 'schema'
 import { inArray } from 'drizzle-orm'
 import { hash } from '@felix/argon2'
 import { array, flatten, InferInput, minLength, pipe } from 'valibot'
@@ -97,30 +97,26 @@ export default new Hono().post(
 
       return result
     })
-    
-    
-    const responseUsuarios = []
 
-    for (const r of inserted) {
-      if (r.permissao === 'admin') {
-        responseUsuarios.push({
-          id: r.id,
-          nome: r.nome,
-          email: r.email,
-          permissao: 'admin',
-        })
-      } else {
-        responseUsuarios.push({
-          id: r.id,
-          nome: r.nome,
-          email: r.email,
-          permissao: 'estagiario',
-          dataInicio: r.dataInicio ?? undefined,
-          dataFim: r.dataFim ?? undefined,
-        })
-      }
-    }
-
-    return c.json({ usuarios: responseUsuarios }, 201)
+    return c.json({
+      message: inserted.length > 1 ? 'Usuários cadastrados com sucesso.' : 'Usuário cadastrado com sucesso.',
+      usuarios: inserted.map((usuario) =>
+        usuario.permissao === 'admin'
+          ? {
+            id: usuario.id,
+            nome: usuario.nome,
+            email: usuario.email,
+            permissao: 'admin',
+          }
+          : {
+            id: usuario.id,
+            nome: usuario.nome,
+            email: usuario.email,
+            permissao: 'estagiario',
+            dataInicio: usuario.dataInicio,
+            dataFim: usuario.dataFim,
+          }
+      ),
+    }, 201)
   },
 )

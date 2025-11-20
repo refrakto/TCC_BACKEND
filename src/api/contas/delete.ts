@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { acesso, jsonValidator } from '../../utils/permissao.ts'
 import { SelectCadastroSchema } from '../../valibot/cadastro.ts'
-import * as schema from '@/database/main.ts'
+import * as schema from 'schema'
 import { eq } from 'drizzle-orm'
 import { createHTTPException, handleDBError } from '../../utils/errors.ts'
 
@@ -73,21 +73,25 @@ export default new Hono().delete(
     })
 
     return c.json(
-      usuarioDeletado.permissao === 'admin'
-        ? {
-          id: usuarioDeletado.id,
-          email: usuarioDeletado.email,
-          nome: usuarioDeletado.nome,
-          permissao: 'admin',
-        }
-        : {
-          id: usuarioDeletado.id,
-          email: usuarioDeletado.email,
-          nome: usuarioDeletado.nome,
-          permissao: 'estagiario',
-          dataInicio: usuarioDeletado.dataInicio ?? undefined,
-          dataFim: usuarioDeletado.dataFim ?? undefined,
-        },
+      {
+        message: 'Usuário deletado com sucesso.',
+        usuario: usuarioDeletado.permissao === 'admin'
+          ? {
+            id: usuarioDeletado.id,
+            email: usuarioDeletado.email,
+            nome: usuarioDeletado.nome,
+            permissao: 'admin',
+          }
+          : {
+            id: usuarioDeletado.id,
+            email: usuarioDeletado.email,
+            nome: usuarioDeletado.nome,
+            permissao: 'estagiario',
+            dataInicio: usuarioDeletado.dataInicio,
+            dataFim: usuarioDeletado.dataFim,
+          },
+      },
+      200,
     )
   },
 )

@@ -1,4 +1,4 @@
-import * as schema from '@/database/main.ts'
+import * as schema from 'schema'
 import { and, eq, inArray } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { createHTTPException, handleDBError } from '@/utils/errors.ts'

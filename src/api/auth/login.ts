@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import * as schema from '@/database/main.ts'
+import * as schema from 'schema'
 import { eq } from 'drizzle-orm'
 import { verify } from '@felix/argon2'
 import { SignJWT } from 'jose'
@@ -49,25 +49,23 @@ export default new Hono().post(
       .setExpirationTime('24h')
       .sign(JWT_SECRET)
 
-    const valorFinal = {
+    return c.json({
       token,
       usuario: usuario.permissao === 'admin'
         ? {
           id: usuario.id,
           nome: usuario.nome,
           email: usuario.email,
-          permissao: usuario.permissao,
+          permissao: 'admin',
         }
         : {
           id: usuario.id,
           nome: usuario.nome,
           email: usuario.email,
-          permissao: usuario.permissao,
+          permissao: 'estagiario',
           dataInicio: usuario.dataInicio,
-          dataFim: usuario.dataFim ?? undefined,
+          dataFim: usuario.dataFim,
         },
-    }
-
-    return c.json(valorFinal)
+    })
   },
 )

@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { acesso, jsonValidator } from '@/utils/permissao.ts'
 import { intersect, partial } from 'valibot'
 import { PluviometroSchema, SelectPluviSchema } from '@/valibot/pluvi.ts'
-import * as schema from '@/database/main.ts'
+import * as schema from 'schema'
 import { createHTTPException, handleDBError } from '@/utils/errors.ts'
 import { eq, inArray } from 'drizzle-orm'
 

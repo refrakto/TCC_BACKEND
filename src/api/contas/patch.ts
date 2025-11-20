@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { vValidator } from '@hono/valibot-validator'
 import { CadastroPartialSchema, EmailSchema } from '@/valibot/cadastro.ts'
-import * as schema from '@/database/main.ts'
+import * as schema from 'schema'
 import { eq, inArray } from 'drizzle-orm'
 import { hash } from '@felix/argon2'
 import { array, flatten, InferInput, minLength, object, pipe } from 'valibot'
@@ -155,6 +155,25 @@ export default new Hono().patch(
       return result
     })
 
-    return c.json({ message: 'Usuários atualizados com sucesso.', usuarios: updated }, 200)
+    return c.json({
+      message: 'Usuários atualizados com sucesso.',
+      usuarios: updated.map((usuario) =>
+        usuario.permissao === 'admin'
+          ? {
+            id: usuario.id,
+            nome: usuario.nome,
+            email: usuario.email,
+            permissao: 'admin',
+          }
+          : {
+            id: usuario.id,
+            nome: usuario.nome,
+            email: usuario.email,
+            permissao: 'estagiario',
+            dataInicio: usuario.dataInicio,
+            dataFim: usuario.dataFim,
+          }
+      ),
+    }, 200)
   },
 )

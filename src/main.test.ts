@@ -549,8 +549,8 @@ Deno.test('Contas - DELETE /contas - should delete account by id', async () => {
     200,
     `Expected 200 but got ${response.status}: ${JSON.stringify(data)}`,
   )
-  assertEquals(data.id, estagiarioId)
-  assertEquals(data.email, TEST_ESTAGIARIO.email.toLowerCase().trim())
+  assertEquals(data.usuario.id, estagiarioId)
+  assertEquals(data.usuario.email, TEST_ESTAGIARIO.email.toLowerCase().trim())
 })
 
 Deno.test('Contas - DELETE /contas - should delete account by email', async () => {
@@ -565,7 +565,7 @@ Deno.test('Contas - DELETE /contas - should delete account by email', async () =
 
   assertEquals(response.status, 200)
   const data = await response.json()
-  assertEquals(data.email, TEST_ESTAGIARIO_2.email.toLowerCase().trim())
+  assertEquals(data.usuario.email, TEST_ESTAGIARIO_2.email.toLowerCase().trim())
 })
 
 Deno.test('Contas - DELETE /contas - should fail deleting non-existent id', async () => {
@@ -714,8 +714,8 @@ Deno.test('Contas - DELETE /contas - cleanup: delete admin account', async () =>
       200,
       `Expected 200 but got ${response.status}: ${JSON.stringify(data)}`,
     )
-    assertEquals(data.id, adminId)
-    assertEquals(data.permissao, 'admin')
+    assertEquals(data.usuario.id, adminId)
+    assertEquals(data.usuario.permissao, 'admin')
   
     // Delete second admin using bypass token
     await fetch(`${BASE_URL}/contas`, {

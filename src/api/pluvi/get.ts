@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import * as schema from '@/database/main.ts'
+import * as schema from 'schema'
 import { createHTTPException, handleDBError } from '../../utils/errors.ts'
 
 export default new Hono().get('/', async (c) => {
@@ -18,7 +18,7 @@ export default new Hono().get('/', async (c) => {
   }
   
   return c.json({
-    message: 'Pluviômetros selecionados com sucesso.',
+    message: 'Pluviômetros enviados com sucesso.',
     pluvis,
   }, 200)
 })

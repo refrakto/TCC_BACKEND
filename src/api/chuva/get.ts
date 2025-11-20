@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { check, forward, object, pipe, union } from 'valibot'
 import { DataSchema } from '@/valibot/comum.ts'
-import * as schema from '@/database/main.ts'
+import * as schema from 'schema'
 import { and, eq, gte, lte } from 'drizzle-orm'
 import { jsonValidator } from '@/utils/permissao.ts'
 import { createHTTPException, handleDBError } from '@/utils/errors.ts'

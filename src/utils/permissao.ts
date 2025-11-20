@@ -2,7 +2,7 @@ import { vValidator } from '@hono/valibot-validator'
 import { JWT_SECRET } from '@/main.ts'
 import { jwtVerify } from 'jose'
 import { HeaderBearerSchema } from '@/valibot/comum.ts'
-import * as schema from '@/database/main.ts'
+import * as schema from 'schema'
 import { eq } from 'drizzle-orm'
 import { HTTPException } from 'hono/http-exception'
 import { flatten, GenericSchema, GenericSchemaAsync } from 'valibot'
@@ -13,7 +13,7 @@ export const acesso = (permissaoPermitida: 'estagiario' | 'admin') => async (c: 
   const authHeader = c.req.header('Authorization')
   if (authHeader) {
     const token = authHeader.split(' ')[1]
-    if (token === new TextDecoder().decode(JWT_SECRET)) {
+    if (c.get('bypassJWT') && token === new TextDecoder().decode(JWT_SECRET)) {
       c.set('acesso', { id: token })
       return next()
     }
