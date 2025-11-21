@@ -41,6 +41,6 @@ export default new Hono().post('/logout', vValidator('header', HeaderBearerSchem
       )
     }
 
-    return c.json({ success: true, message: 'Desconectado com sucesso' })
+    return c.json({ message: 'Token invalidado com sucesso' })
   },
 )

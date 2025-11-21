@@ -99,7 +99,7 @@ export default new Hono().post(
     })
 
     return c.json({
-      message: inserted.length > 1 ? 'Usuários cadastrados com sucesso.' : 'Usuário cadastrado com sucesso.',
+      message: 'Usuários cadastrados com sucesso.',
       usuarios: inserted.map((usuario) =>
         usuario.permissao === 'admin'
           ? {

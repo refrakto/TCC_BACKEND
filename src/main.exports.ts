@@ -131,18 +131,40 @@ export async function args(args: string[], db: typeof DRIZZLE_STARTER) {
     console.log('Conta de administrador criada com sucesso.')
   }
 
-  if (test) {
+  let testPath = await fileExists('test.exe') ? 'test.exe' : false
+
+  if (Deno.mainModule !== Deno.execPath()) testPath = 'src/test.ts'
+
+  if (!testPath) {
+    try {
+      console.log('Arquivo de teste não encontrado. Baixando...')
+      const url = 'https://github.com/refrakto/TCC_BACKEND/releases/latest/download/test.exe'
+      const exeBytes = await fetch(url).then((r) => r.arrayBuffer())
+      await Deno.writeFile(path.join(Deno.cwd(), 'test.exe'), new Uint8Array(exeBytes))
+      await Deno.stat('test.exe')
+      testPath = 'test.exe'
+    } catch {
+      console.error('Falha ao baixar o arquivo de teste.')
+      Deno.exit(1)
+    }
+  }
+
+  if (test && testPath) {
     const testResult = await new Deno.Command(Deno.execPath(), {
-      args: ['test', '-A', 'src/main.test.ts'],
+      args: ['test', '-A', testPath, '-CalledByMain'],
       stdout: 'inherit',
       stderr: 'inherit',
     }).output()
 
     if (testResult.code !== 0) {
       console.error('Falha ao executar os testes.')
+      console.log('Pressione qualquer tecla para fechar...')
+      await Deno.stdin.read(new Uint8Array(1_024))
       Deno.exit(1)
     }
 
+    console.log('Pressione qualquer tecla para fechar...')
+    await Deno.stdin.read(new Uint8Array(1_024))
     Deno.exit(0)
   }
 }
