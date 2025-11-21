@@ -51,6 +51,7 @@ export default new Hono().post(
 
     return c.json({
       token,
+      message: 'Usuário autenticado com sucesso',
       usuario: usuario.permissao === 'admin'
         ? {
           id: usuario.id,

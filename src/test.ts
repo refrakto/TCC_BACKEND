@@ -30,6 +30,13 @@ import { JWT_SECRET } from '@/main.ts'
 
 const BASE_URL = 'http://localhost:8000'
 
+if (!Deno.args.includes('-CalledByMain')) {
+  console.log('Esse arquivo não pode ser executado diretamente!')
+  console.log('Pressione qualquer tecla para fechar...')
+  await Deno.stdin.read(new Uint8Array(1_024))
+  Deno.exit()
+}
+
 // Test data
 const TEST_ADMIN = {
   nome: 'Admin Test',
@@ -166,7 +173,7 @@ Deno.test('Contas - POST /contas - should create admin account (first setup)', a
       },
       body: JSON.stringify({ email: TEST_ADMIN.email }),
     }).then((r) => r.text().catch(() => {}))
-  } catch {}
+  } catch { /* Do nothing */ }
 
   const response = await fetch(`${BASE_URL}/contas`, {
     method: 'POST',

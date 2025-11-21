@@ -65,6 +65,7 @@ export default new Hono().get('/check', vValidator('header', HeaderBearerSchema)
   }
 
   return c.json({
+    message: 'Usuário autenticado com sucesso',
     usuario: usuario.permissao === 'admin'
       ? {
         id: usuario.id,
