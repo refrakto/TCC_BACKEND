@@ -57,7 +57,7 @@ export function eventListeners() {
 
 export async function args(args: string[], db: typeof DRIZZLE_STARTER) {
   const init = args.includes('--init')
-  const test = args.includes('--test')
+  const test = args.includes('--test') && !Deno.build.standalone
 
   const envPath = path.join(Deno.cwd(), '.env')
   const initEnv = Deno.env.get('INIT')
@@ -131,27 +131,9 @@ export async function args(args: string[], db: typeof DRIZZLE_STARTER) {
     console.log('Conta de administrador criada com sucesso.')
   }
 
-  let testPath = await fileExists('test.exe') ? 'test.exe' : false
-
-  if (Deno.mainModule !== Deno.execPath()) testPath = 'src/test.ts'
-
-  if (!testPath) {
-    try {
-      console.log('Arquivo de teste não encontrado. Baixando...')
-      const url = 'https://github.com/refrakto/TCC_BACKEND/releases/latest/download/test.exe'
-      const exeBytes = await fetch(url).then((r) => r.arrayBuffer())
-      await Deno.writeFile(path.join(Deno.cwd(), 'test.exe'), new Uint8Array(exeBytes))
-      await Deno.stat('test.exe')
-      testPath = 'test.exe'
-    } catch {
-      console.error('Falha ao baixar o arquivo de teste.')
-      Deno.exit(1)
-    }
-  }
-
-  if (test && testPath) {
+  if (test) {
     const testResult = await new Deno.Command(Deno.execPath(), {
-      args: ['test', '-A', testPath, '-CalledByMain'],
+      args: ['test', '-A', 'src/test.ts', '--', '--CalledByMain', '--host', HOST, PORT.toString()],
       stdout: 'inherit',
       stderr: 'inherit',
     }).output()
