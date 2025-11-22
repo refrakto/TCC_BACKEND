@@ -41,9 +41,22 @@ if (import.meta.main) {
     port: main.PORT,
     hostname: main.HOST,
     onListen: (address) =>
-      console.log(`🚀 SIMP-IFRJ BACKEND iniciado com sucesso! \nServindo em: http://${main.simplificarLocalhost(address.hostname)}:${address.port}/`),
+      console.log(
+        `🚀 SIMP-IFRJ BACKEND iniciado com sucesso! \nServindo em: http://${
+          main.simplificarLocalhost(address.hostname)
+        }:${address.port}/`,
+      ),
   }, app.fetch)
 }
+
+setInterval(async () => {
+  try {
+    await main.cleanBlacklist()
+    console.log('Blacklist limpa com sucesso')
+  } catch (error) {
+    console.error('Erro ao limpar blacklist:', error)
+  }
+}, 24 * 60 * 60 * 1000)
 
 //PÓS-EXECUÇÃO
 await new Promise((r) => setTimeout(r, 1000))
