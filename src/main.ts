@@ -49,14 +49,6 @@ if (import.meta.main) {
   }, app.fetch)
 }
 
-setInterval(async () => {
-  try {
-    await main.cleanBlacklist()
-    console.log('Blacklist limpa com sucesso')
-  } catch (error) {
-    console.error('Erro ao limpar blacklist:', error)
-  }
-}, 24 * 60 * 60 * 1000)
 
 //PÓS-EXECUÇÃO
 await new Promise((r) => setTimeout(r, 1000))
