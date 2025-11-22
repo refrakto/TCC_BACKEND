@@ -49,6 +49,7 @@ if (import.meta.main) {
   }, app.fetch)
 }
 
+<<<<<<< HEAD
 setInterval(async () => {
   try {
     await main.cleanBlacklist()
@@ -57,6 +58,10 @@ setInterval(async () => {
     console.error('Erro ao limpar blacklist:', error)
   }
 }, 24 * 60 * 60 * 1000)
+=======
+setInterval(async () => await main.cleanBlacklist(), 24 * 60 * 60 * 1000)
+
+>>>>>>> f4eaa8134bdb891764ee59007759278f68e9f8af
 
 //PÓS-EXECUÇÃO
 await new Promise((r) => setTimeout(r, 1000))
