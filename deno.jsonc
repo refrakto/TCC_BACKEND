@@ -1,7 +1,7 @@
 {
   "tasks": {
     "start": "deno run --allow-env --allow-net --allow-read --allow-write --allow-ffi --allow-run src/main.ts",
-    "test": "deno run -A src/run.tests.ts",
+    "test": "deno test -A src/test.ts",
     "drizzle": "deno i && deno run -A --allow-scripts --env-file=.env drizzle-kit"
   },
   "imports": {

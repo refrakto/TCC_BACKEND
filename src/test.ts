@@ -30,13 +30,6 @@ import { JWT_SECRET } from '@/main.ts'
 
 const BASE_URL = 'http://localhost:3000'
 
-if (!Deno.args.includes('--CalledByMain')) {
-  console.log('Esse arquivo não pode ser executado diretamente!')
-  console.log('Pressione qualquer tecla para fechar...')
-  await Deno.stdin.read(new Uint8Array(1_024))
-  Deno.exit()
-}
-
 // Test data
 const TEST_ADMIN = {
   nome: 'Admin Test',
@@ -493,7 +486,18 @@ Deno.test('Auth - POST /auth/logout - should logout successfully with valid toke
 
   assertEquals(response.status, 200)
   const data = await response.json()
-  assertEquals(data.message, 'Token invalidado com sucesso')
+  assertEquals(data.message, 'Autenticação invalidada com sucesso')
+})
+
+Deno.test('Auth - GET /auth/check - should fail with invalidated token', async () => {
+  const response = await fetch(`${BASE_URL}/auth/check`, {
+    method: 'GET',
+    headers: { 'Authorization': `Bearer ${adminToken}` },
+  })
+
+  assertEquals(response.status, 401)
+  const data = await response.json()
+  assertEquals(data.message, 'Autenticação Expirada')
 })
 
 Deno.test('Auth - POST /auth/logout - should logout estagiario successfully', async () => {
