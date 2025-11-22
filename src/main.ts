@@ -45,6 +45,9 @@ if (import.meta.main) {
   }, app.fetch)
 }
 
+setInterval(async () => await main.cleanBlacklist(), 24 * 60 * 60 * 1000)
+
+
 //PÓS-EXECUÇÃO
 await new Promise((r) => setTimeout(r, 1000))
 

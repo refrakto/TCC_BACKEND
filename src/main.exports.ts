@@ -6,8 +6,9 @@ import { Pool } from 'pg'
 import { hash } from '@felix/argon2'
 import { parse } from 'valibot'
 import { EmailSchema, SenhaSchema } from './valibot/cadastro.ts'
-import { eq } from 'drizzle-orm'
+import { eq, lt } from 'drizzle-orm'
 import { NomeSchema } from './valibot/comum.ts'
+import dayjs from 'dayjs'
 
 export const PORT = Number.parseInt(Deno.env.get('PORT') ?? '3000')
 export const HOST = Deno.env.get('HOST') ?? 'localhost'
@@ -165,7 +166,7 @@ async function fileExists(path: string): Promise<boolean> {
   }
 }
 
-function generateSecret(): string {
+export function generateSecret(): string {
   // Cria um Uint8Array para armazenar os bytes aleatórios
   const randomBytes = new Uint8Array(48)
 
@@ -198,6 +199,11 @@ export async function ensureEnvFile() {
       console.error(error)
     }
   }
+}
+
+export async function cleanBlacklist() {
+  const duracao = dayjs().subtract(24, 'hour').toDate()
+  await DRIZZLE_STARTER.delete(schema.jwt_blacklist).where(lt(schema.jwt_blacklist.createdAt, duracao))
 }
 
 export const HELP_TEMPLATE = `

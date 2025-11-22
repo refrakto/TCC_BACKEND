@@ -5,10 +5,9 @@ import { verify } from '@felix/argon2'
 import { SignJWT } from 'jose'
 import { EmailSchema, SenhaSchema } from '@/valibot/cadastro.ts'
 import { object } from 'valibot'
-import { JWT_SECRET } from '@/main.ts'
+import { generateSecret, JWT_SECRET, DUMMY_HASH } from '@/main.ts'
 import { jsonValidator } from '@/utils/permissao.ts'
 import { createHTTPException, handleDBError } from '@/utils/errors.ts'
-import { DUMMY_HASH } from '@/main.exports.ts'
 
 export const LoginRequestSchema = object({
   email: EmailSchema,
@@ -46,6 +45,7 @@ export default new Hono().post(
       permissao: usuario.permissao,
     })
       .setProtectedHeader({ alg: 'HS256' })
+      .setJti(generateSecret())
       .setExpirationTime('24h')
       .sign(JWT_SECRET)
 

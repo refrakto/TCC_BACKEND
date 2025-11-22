@@ -24,6 +24,27 @@ export default new Hono().get('/check', vValidator('header', HeaderBearerSchema)
   const { payload } = await jwtVerify(token, JWT_SECRET).catch((e) => {
     throw handleJWTError(e)
   })
+  
+  if (!payload.jti) {
+    throw createHTTPException(
+      401,
+      'Autenticação não identificada.',
+      'Token não possui ID de sessão.',
+    )
+  }
+  
+  const [blacklist] = await db
+    .select()
+    .from(schema.jwt_blacklist)
+    .where(eq(schema.jwt_blacklist.jti, payload.jti))
+
+  if (blacklist) {
+    throw createHTTPException(
+      401,
+      'Autenticação Expirada',
+      'Token já está na lista de tokens invalidados.',
+    )
+  }
 
   const [usuario] = await db
     .select({
