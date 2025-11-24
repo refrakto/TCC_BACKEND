@@ -42,6 +42,7 @@ type UsuarioGET = {
 type UsuarioPOST = {
   nome: string
   email: string
+  senha: string
 } & Permissoes
 ```
 Esses tipos também são utilizados para a rota [Contas](#contas)
