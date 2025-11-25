@@ -1,6 +1,77 @@
 # README
 
+# Instalação
 
+## 1. Instalar o PostgreSQL 18
+
+### Windows
+1. Entre no site: https://www.enterprisedb.com/downloads/postgres-postgresql-downloads
+2. Clique em Windows.
+3. Baixe o instalador do EDB (é o padrão).
+4. Abra o instalador.
+5. Em "Select Components" desmarque apenas Stack Builder, a não ser que conheça e queira usar depois.
+6. Em "Password" defina uma senha memorável para o superusuário. Anote se for necessário.
+7. Em "Port" mantenha como 5432 ao menos que necessário trocar.
+8. Avance até instalar.
+9. Ao completar, desmarque a opção de iniciar o Stack Builder e finalize.
+
+### Linux (Ubuntu)
+```bash
+sudo apt update
+sudo apt install postgresql postgresql-contrib pgadmin4
+```
+
+### macOS
+ - Se usa Homebrew:
+```bash
+brew install postgresql
+brew services start postgresql
+```
+- Ou baixe o instalador no [site oficial](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads) e siga as instruções do Windows.
+
+## 2. Abrir o pgAdmin 4
+
+**Windows**: procure pgAdmin 4 no menu iniciar.\
+**macOS/Linux**: abra normalmente pelo launcher ou procure por "pgAdmin".
+
+Ao abrir, ele pede que você crie uma senha de segurança para o pgAdmin.
+Crie uma senha e não esqueça.
+
+## 3. Conectar ao PostgreSQL no pgAdmin
+
+1. Na esquerda, clique em **Servers** (duplo clique).
+2. Vai aparecer PostgreSQL 18, clique.
+3. Ele vai pedir a senha → coloque aquela senha do usuário postgres que você criou durante a *instalação*.
+
+Agora você está conectado ao servidor. 
+
+## 4. Criar um novo banco de dados
+
+1. Clique com o botão direito em Databases.
+2. Clique em Create > Database.
+3. No campo Database coloque o nome do seu app.
+4. Clique em Save.
+
+## 5. Inserir tabelas no banco de dados
+
+1. Baixe o [modelo de SQL](/generated-database.sql)
+2. Clique com o botão direito no banco de dados criado.
+3. Clique em Restore.
+4. Em Format, selecione **Plain**.
+5. Em Filename, selecione o arquivo baixado.
+> Caso não achar o arquivo na pasta, olhe o canto inferior direito da seleção.\
+> Se tiver escrito "BACKUP File .backup (*.backup)" você deve trocar esse campo para "SQL File .sql (*.sql)"
+5. Clique em Restore.
+
+## 6. Criar usuário para o SIMPIFRJ-Backend
+
+1. Acima de Databases, clique com o botão direito em PostgreSQL 18.
+2. Clique em Create > Login/Group Role...
+3. Configure cada aba:
+  - Aba Geral: defina o nome.
+  - Aba Definition: defina a senha em Password.
+  - Aba Privileges: Marque "Can login?"
+4. Clique em Save.
 
 # Rotas da API
 
