@@ -1,12 +1,12 @@
 import { Hono } from 'hono'
 import { vValidator } from '@hono/valibot-validator'
-import { CadastroSchema } from '@/valibot/cadastro.ts'
+import { CadastroSchema } from '../../valibot/cadastro.ts'
 import * as schema from 'schema'
 import { inArray } from 'drizzle-orm'
 import { hash } from '@felix/argon2'
 import { array, flatten, InferInput, minLength, pipe } from 'valibot'
-import { acesso } from '@/utils/permissao.ts'
-import { createHTTPException, handleDBError } from '@/utils/errors.ts'
+import { acesso } from '../../utils/permissao.ts'
+import { createHTTPException, handleDBError } from '../../utils/errors.ts'
 
 export const CadastroArraySchema = pipe(
   array(CadastroSchema, 'Array de cadastros inválido.'),

@@ -1,10 +1,10 @@
 import * as schema from 'schema'
 import { and, eq, inArray } from 'drizzle-orm'
 import { Hono } from 'hono'
-import { createHTTPException, handleDBError } from '@/utils/errors.ts'
-import { acesso, jsonValidator } from '@/utils/permissao.ts'
+import { createHTTPException, handleDBError } from '../../utils/errors.ts'
+import { acesso, jsonValidator } from '../../utils/permissao.ts'
 import { intersect, object } from 'valibot'
-import { ArrayMedicoesSchema, SelectChuvaSchema } from '@/valibot/chuva.ts'
+import { ArrayMedicoesSchema, SelectChuvaSchema } from '../../valibot/chuva.ts'
 import { checkMedicoes } from './main.ts'
 
 export const PatchChuvaSchema = intersect([

@@ -26,7 +26,7 @@
  */
 
 import { assertEquals, assertExists } from '@std/assert'
-import { JWT_SECRET } from '@/main.ts'
+import { JWT_SECRET } from './main.ts'
 
 const BASE_URL = 'http://localhost:3000'
 

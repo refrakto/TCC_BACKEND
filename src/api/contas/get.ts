@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import * as schema from 'schema'
-import { acesso } from '@/utils/permissao.ts'
-import { createHTTPException, handleDBError } from '@/utils/errors.ts'
+import { acesso } from '../../utils/permissao.ts'
+import { createHTTPException, handleDBError } from '../../utils/errors.ts'
 
 export default new Hono().get('/', acesso('admin'), async (c) => {
   const db = c.get('db')

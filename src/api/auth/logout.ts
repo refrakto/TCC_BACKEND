@@ -2,10 +2,10 @@ import { Hono } from 'hono'
 import { jwtVerify } from 'jose'
 import { eq } from 'drizzle-orm'
 import * as schema from 'schema'
-import { JWT_SECRET } from '@/main.ts'
-import { createHTTPException, handleDBError, handleJWTError } from '@/utils/errors.ts'
+import { JWT_SECRET } from '../../main.ts'
+import { createHTTPException, handleDBError, handleJWTError } from '../../utils/errors.ts'
 import { vValidator } from '@hono/valibot-validator'
-import { HeaderBearerSchema } from '@/valibot/comum.ts'
+import { HeaderBearerSchema } from '../../valibot/comum.ts'
 
 export default new Hono().post('/logout', vValidator('header', HeaderBearerSchema), async (c) => {
   const db = c.get('db')

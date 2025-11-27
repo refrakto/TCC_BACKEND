@@ -1,12 +1,12 @@
 import { Hono } from 'hono'
 import { vValidator } from '@hono/valibot-validator'
-import { CadastroPartialSchema, EmailSchema } from '@/valibot/cadastro.ts'
+import { CadastroPartialSchema, EmailSchema } from '../../valibot/cadastro.ts'
 import * as schema from 'schema'
 import { eq, inArray } from 'drizzle-orm'
 import { hash } from '@felix/argon2'
 import { array, flatten, InferInput, minLength, object, pipe } from 'valibot'
-import { acesso } from '@/utils/permissao.ts'
-import { createHTTPException, handleDBError } from '@/utils/errors.ts'
+import { acesso } from '../../utils/permissao.ts'
+import { createHTTPException, handleDBError } from '../../utils/errors.ts'
 import dayjs from 'dayjs'
 
 export const SelectCadastroArraySchema = pipe(

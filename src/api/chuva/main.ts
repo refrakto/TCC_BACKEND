@@ -4,8 +4,8 @@ import get from './get.ts'
 import patch from './patch.ts'
 import _delete from './delete.ts'
 import { InferOutput } from 'valibot'
-import { PluviometroSchema } from '@/valibot/pluvi.ts'
-import { MedicaoSchema } from '@/valibot/chuva.ts'
+import { PluviometroSchema } from '../../valibot/pluvi.ts'
+import { MedicaoSchema } from '../../valibot/chuva.ts'
 import { createHTTPException } from '../../utils/errors.ts'
 
 export default new Hono()

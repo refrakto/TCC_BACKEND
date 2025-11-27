@@ -1,9 +1,9 @@
 import { eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 import * as schema from 'schema'
-import { acesso, jsonValidator } from '@/utils/permissao.ts'
-import { createHTTPException, handleDBError } from '@/utils/errors.ts'
-import { SelectChuvaSchema } from '@/valibot/chuva.ts'
+import { acesso, jsonValidator } from '../../utils/permissao.ts'
+import { createHTTPException, handleDBError } from '../../utils/errors.ts'
+import { SelectChuvaSchema } from '../../valibot/chuva.ts'
 
 export default new Hono().delete(
   '/',

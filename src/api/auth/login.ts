@@ -3,11 +3,11 @@ import * as schema from 'schema'
 import { eq } from 'drizzle-orm'
 import { verify } from '@felix/argon2'
 import { SignJWT } from 'jose'
-import { EmailSchema, SenhaSchema } from '@/valibot/cadastro.ts'
+import { EmailSchema, SenhaSchema } from '../../valibot/cadastro.ts'
 import { object } from 'valibot'
-import { generateSecret, JWT_SECRET, DUMMY_HASH } from '@/main.ts'
-import { jsonValidator } from '@/utils/permissao.ts'
-import { createHTTPException, handleDBError } from '@/utils/errors.ts'
+import { generateSecret, JWT_SECRET, DUMMY_HASH } from '../../main.ts'
+import { jsonValidator } from '../../utils/permissao.ts'
+import { createHTTPException, handleDBError } from '../../utils/errors.ts'
 
 export const LoginRequestSchema = object({
   email: EmailSchema,

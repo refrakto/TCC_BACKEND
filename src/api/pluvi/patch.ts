@@ -1,9 +1,9 @@
 import { Hono } from 'hono'
-import { acesso, jsonValidator } from '@/utils/permissao.ts'
+import { acesso, jsonValidator } from '../../utils/permissao.ts'
 import { intersect, partial } from 'valibot'
-import { PluviometroSchema, SelectPluviSchema } from '@/valibot/pluvi.ts'
+import { PluviometroSchema, SelectPluviSchema } from '../../valibot/pluvi.ts'
 import * as schema from 'schema'
-import { createHTTPException, handleDBError } from '@/utils/errors.ts'
+import { createHTTPException, handleDBError } from '../../utils/errors.ts'
 import { eq, inArray } from 'drizzle-orm'
 
 export const PatchPluviSchema = intersect([

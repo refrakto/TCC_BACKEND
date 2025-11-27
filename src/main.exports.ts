@@ -58,12 +58,11 @@ export function eventListeners() {
 
 export async function args(args: string[], db: typeof DRIZZLE_STARTER) {
   const init = args.includes('--init')
-  const test = args.includes('--test') && !Deno.build.standalone
 
   const envPath = path.join(Deno.cwd(), '.env')
   const initEnv = Deno.env.get('INIT')
 
-  if (initEnv !== undefined) {
+  if (init && initEnv !== undefined) {
     let res
     while (!(res === 's' || res === 'n' || res === 'sim' || res === 'nao')) {
       console.clear()
@@ -77,13 +76,15 @@ export async function args(args: string[], db: typeof DRIZZLE_STARTER) {
       const linhasFiltradas = linhas.filter((l) => !l.includes('INIT'))
       const textoNovo = linhasFiltradas.join('\n')
       await Deno.writeTextFile(envPath, textoNovo)
-    } else return
+    } else {
+      return 23
+    }
   }
 
   if (init) {
     if (!db) {
       console.error('Falha ao conectar ao banco de dados.')
-      Deno.exit(1)
+      return 1
     }
 
     let nome, email, senha
@@ -93,13 +94,13 @@ export async function args(args: string[], db: typeof DRIZZLE_STARTER) {
     } catch {
       console.error('Falha ao validar o email.')
       console.log('Insira um email válido. Exemplo: email@endereco.com')
-      Deno.exit(1)
+      return 1
     }
 
     const existente = await db.select().from(schema.usuario).where(eq(schema.usuario.email, email))
     if (existente.length) {
       console.error('Email já cadastrado.')
-      Deno.exit(1)
+      return 1
     }
 
     try {
@@ -107,7 +108,7 @@ export async function args(args: string[], db: typeof DRIZZLE_STARTER) {
     } catch {
       console.error('Falha ao validar o email.')
       console.log('Insira até 100 caracteres para o nome.')
-      Deno.exit(1)
+      return 1
     }
 
     try {
@@ -115,7 +116,7 @@ export async function args(args: string[], db: typeof DRIZZLE_STARTER) {
     } catch {
       console.error('Falha ao validar a senha.')
       console.log('Insira ao menos 8 caracteres, até 100.')
-      Deno.exit(1)
+      return 1
     }
 
     const [{ id }] = await db.insert(schema.usuario).values({
@@ -129,26 +130,7 @@ export async function args(args: string[], db: typeof DRIZZLE_STARTER) {
     const textoNovo = textoExistente.trimEnd() + '\n\n' + `INIT=${id}`
     await Deno.writeTextFile(envPath, textoNovo)
     console.clear()
-    console.log('Conta de administrador criada com sucesso.')
-  }
-
-  if (test) {
-    const testResult = await new Deno.Command(Deno.execPath(), {
-      args: ['test', '-A', 'src/test.ts', '--', '--CalledByMain', '--host', HOST, PORT.toString()],
-      stdout: 'inherit',
-      stderr: 'inherit',
-    }).output()
-
-    if (testResult.code !== 0) {
-      console.error('Falha ao executar os testes.')
-      console.log('Pressione qualquer tecla para fechar...')
-      await Deno.stdin.read(new Uint8Array(1_024))
-      Deno.exit(1)
-    }
-
-    console.log('Pressione qualquer tecla para fechar...')
-    await Deno.stdin.read(new Uint8Array(1_024))
-    Deno.exit(0)
+    return 22
   }
 }
 
@@ -197,13 +179,16 @@ export async function ensureEnvFile() {
     } catch (error) {
       console.error(`Falha ao criar ${envPath}.`)
       console.error(error)
+      Deno.exit(1)
     }
   }
 }
 
 export async function cleanBlacklist() {
   const duracao = dayjs().subtract(24, 'hour').toDate()
-  await DRIZZLE_STARTER.delete(schema.jwt_blacklist).where(lt(schema.jwt_blacklist.createdAt, duracao))
+  await DRIZZLE_STARTER.delete(schema.jwt_blacklist).where(
+    lt(schema.jwt_blacklist.createdAt, duracao),
+  )
 }
 
 export const HELP_TEMPLATE = `
@@ -213,8 +198,18 @@ Certifique de que o banco de dados esteja configurado corretamente.
 
 Opções:
   -h, --help    Mostra essa ajuda.
-  --test        Executa os testes automatizados.
   --init        Cria a primeira conta de administrador.
+`
+
+export const HELP_EXEC_TEMPLATE = `
+SIMP-IFRJ BACKEND
+
+Certifique de que o banco de dados esteja configurado corretamente.
+
+Opções:
+  help                          Mostra essa ajuda.
+  init                          Cria a primeira conta de administrador.
+  sair/fechar/stop/exit/quit    Encerra o programa.
 `
 
 const DOTENV_TEMPLATE = (JWT_SECRET: string) =>

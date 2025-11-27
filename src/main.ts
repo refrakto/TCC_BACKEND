@@ -1,10 +1,10 @@
 import { Hono } from 'hono'
 
 import * as main from './main.exports.ts'
-import auth from '@@/auth/main.ts'
-import chuva from '@@/chuva/main.ts'
-import contas from '@@/contas/main.ts'
-import pluvi from '@@/pluvi/main.ts'
+import auth from './api/auth/main.ts'
+import chuva from './api/chuva/main.ts'
+import contas from './api/contas/main.ts'
+import pluvi from './api/pluvi/main.ts'
 
 if (Deno.args.includes('-h') || Deno.args.includes('--help')) {
   console.log(main.HELP_TEMPLATE)
@@ -34,18 +34,18 @@ app
   .route('/', contas)
   .route('/', pluvi)
 
+let servingMessage = `🚀 SIMP-IFRJ BACKEND iniciado com sucesso! \nServindo em: http://`
+
 if (import.meta.main) {
   main.eventListeners()
   console.clear()
   Deno.serve({
     port: main.PORT,
     hostname: main.HOST,
-    onListen: (address) =>
-      console.log(
-        `🚀 SIMP-IFRJ BACKEND iniciado com sucesso! \nServindo em: http://${
-          main.simplificarLocalhost(address.hostname)
-        }:${address.port}/`,
-      ),
+    onListen: (address) => {
+      servingMessage += `${main.simplificarLocalhost(address.hostname)}:${address.port}/`
+      console.log(servingMessage)
+    },
   }, app.fetch)
 }
 
@@ -61,7 +61,40 @@ setInterval(async () => {
 //PÓS-EXECUÇÃO
 await new Promise((r) => setTimeout(r, 1000))
 
-main.args(Deno.args, main.DRIZZLE_STARTER)
+let result = await main.args(Deno.args, main.DRIZZLE_STARTER)
+if (result === 1) Deno.exit(1)
+if (result === 22 || result === 23) {
+  if (result === 23) console.log('\nOperação cancelada.\n')
+  console.log(servingMessage)
+  if (result === 22) console.log('\nConta de administrador criada com sucesso.')
+}
+
+console.log('\nDigite help para obter ajuda.')
+
+let res
+while (!(res === 'fechar' || res === 'sair' || res === 'stop' || res === 'exit')) {
+  res = prompt('\n> ')
+  switch (res) {
+    case 'help':
+      console.log(main.HELP_EXEC_TEMPLATE)
+      break
+    case 'init':
+      result = await main.args(['--init'], main.DRIZZLE_STARTER)
+      if (result === 22 || result === 23) {
+        if (result === 23) console.log('\nOperação cancelada.\n')
+        console.log(servingMessage)
+        if (result === 22) console.log('\nConta de administrador criada com sucesso.')
+      }
+      break
+    default:
+      if (!(res === 'fechar' || res === 'sair' || res === 'stop' || res === 'exit')) {
+        console.log('Comando inválido')
+      }
+      break
+  }
+}
+
+Deno.exit(0)
 
 export * from './main.exports.ts'
 export type AppType = typeof app
